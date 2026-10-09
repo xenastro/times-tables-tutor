@@ -60,7 +60,9 @@ export function practiceDaysLast7(events: TutorEvent[], now: number): number {
 
 export function practisedToday(events: TutorEvent[], now: number): boolean {
   const today = dayKey(now);
-  return events.some((e) => e.type === 'session_end' && dayKey(e.ts) === today);
+  return events.some(
+    (e) => e.type === 'session_end' && (e.payload as SessionEndPayload).kind === 'practice' && dayKey(e.ts) === today,
+  );
 }
 
 export interface TroubleFact {

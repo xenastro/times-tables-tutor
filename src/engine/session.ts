@@ -105,12 +105,10 @@ export class CheckupSession {
   private missStreak = new Map<number, number>();
   private resolved = new Set<string>();
   private max: number;
-  private rng: Rng;
   private settings: LearnerSettings;
 
   constructor(state: LearnerState, settings: LearnerSettings, sessionId: string, rng: Rng = Math.random) {
     this.sessionId = sessionId;
-    this.rng = rng;
     this.settings = settings;
     this.max = settings.range === 12 ? 12 : 10;
     this.calibrationLatencies = state.baselineMs == null ? [] : [state.baselineMs];

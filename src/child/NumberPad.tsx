@@ -1,0 +1,36 @@
+const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'back', '0', 'enter'];
+
+export function NumberPad({
+  onPress,
+  disabled,
+  canSubmit,
+}: {
+  onPress: (key: string) => void;
+  disabled: boolean;
+  canSubmit: boolean;
+}) {
+  return (
+    <div className="numpad" role="group" aria-label="Number pad">
+      {KEYS.map((k) => (
+        <button
+          key={k}
+          className={k === 'enter' ? 'enter' : undefined}
+          disabled={disabled || (k === 'enter' && !canSubmit)}
+          aria-label={k === 'back' ? 'Delete' : k === 'enter' ? 'Check' : k}
+          // pointerdown feels instant on phones; click covers keyboard activation.
+          onPointerDown={(e) => {
+            if (e.pointerType !== 'mouse') {
+              e.preventDefault();
+              onPress(k);
+            }
+          }}
+          onClick={(e) => {
+            if ((e.nativeEvent as PointerEvent).pointerType === 'mouse' || e.detail === 0) onPress(k);
+          }}
+        >
+          {k === 'back' ? '⌫' : k === 'enter' ? '✓' : k}
+        </button>
+      ))}
+    </div>
+  );
+}
