@@ -25,7 +25,7 @@ export function BarModel({ bar, compact }: { bar: Bar; compact?: boolean }) {
         <div
           key={i}
           className={`seg seg-${tone}${i >= firstNew ? ' enter' : ''}`}
-          style={{ '--d': `${Math.max(0, i - firstNew) * 70}ms` } as React.CSSProperties}
+          style={{ '--d': `${Math.max(0, i - firstNew) * 140}ms` } as React.CSSProperties}
         >
           {bar.size}
         </div>

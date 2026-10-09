@@ -429,7 +429,7 @@ label.field {
 /* ---------------------------------------------------------------- fact map */
 .factmap {
   display: grid;
-  gap: 3px;
+  gap: 2px;
   width: 100%;
   user-select: none;
 }
@@ -437,7 +437,7 @@ label.field {
 .factmap .hd {
   display: grid;
   place-items: center;
-  font-size: 0.72rem;
+  font-size: clamp(0.75rem, 3.4vw, 0.95rem);
   font-weight: 700;
   color: var(--ink-3);
   aspect-ratio: 1;
@@ -445,13 +445,14 @@ label.field {
 
 .factmap .cell {
   aspect-ratio: 1;
-  border-radius: 5px;
+  border-radius: 6px;
   border: none;
   padding: 0;
   display: grid;
   place-items: center;
-  font-size: clamp(0.55rem, 2.6vw, 0.78rem);
-  font-weight: 600;
+  font-size: clamp(0.72rem, 3.6vw, 1.05rem);
+  letter-spacing: -0.02em;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--lv-ink);
   background: var(--lv0);
@@ -1124,10 +1125,10 @@ table.simple th {
   background: var(--accent);
   color: var(--accent-ink);
   transition:
-    background-color 0.45s ease,
-    color 0.45s ease,
-    opacity 0.45s ease,
-    transform 0.45s ease;
+    background-color 0.9s ease,
+    color 0.9s ease,
+    opacity 0.9s ease,
+    transform 0.9s ease;
 }
 
 .bar-model.compact .seg {
@@ -1164,12 +1165,12 @@ table.simple th {
   border-radius: 2px;
   background: var(--ink-2);
   transform: rotate(-35deg) scaleX(1);
-  animation: strike 0.5s ease 0.2s both;
+  animation: strike 1s ease 0.4s both;
 }
 
 /* New blocks pop in one after another. */
 .bar-model .seg.enter {
-  animation: seg-in 0.42s cubic-bezier(0.3, 1.4, 0.5, 1) var(--d) both;
+  animation: seg-in 0.84s cubic-bezier(0.3, 1.4, 0.5, 1) var(--d) both;
 }
 
 @keyframes seg-in {
@@ -1198,12 +1199,12 @@ table.simple th {
 
 .swap-old {
   color: var(--ink-3);
-  animation: swap-out 0.5s ease 0.5s both;
+  animation: swap-out 1s ease 1s both;
 }
 
 .swap-new {
   color: var(--accent-text);
-  animation: swap-in 0.5s cubic-bezier(0.3, 1.4, 0.5, 1) 0.85s both;
+  animation: swap-in 1s cubic-bezier(0.3, 1.4, 0.5, 1) 1.7s both;
 }
 
 @keyframes swap-out {
@@ -1262,8 +1263,8 @@ table.simple th {
   text-align: center;
   transform: translate(calc(var(--x) * var(--slot)), calc(var(--y) * 1.1em)) scale(var(--s));
   transition:
-    transform 0.6s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.4s ease,
+    transform 1.2s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.8s ease,
     color 0.2s ease;
 }
 
@@ -1282,4 +1283,55 @@ table.simple th {
   min-height: 2.9em;
   text-align: center;
   text-wrap: balance;
+}
+
+/* The fact map gets the full width of a phone. */
+@media (max-width: 480px) {
+  .card.map-card {
+    padding: 10px;
+  }
+}
+
+/* ---------------------------------------------------------------- turnaround short */
+.turnaround {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0 4px;
+  width: 100%;
+}
+
+.turnaround-stage {
+  display: grid;
+  place-items: center;
+}
+
+.turnaround-grid {
+  display: grid;
+  gap: 3px;
+  transition: transform 2.4s cubic-bezier(0.45, 0, 0.25, 1);
+}
+
+.turnaround-grid.turned {
+  transform: rotate(90deg);
+}
+
+.turnaround-grid span {
+  border-radius: 4px;
+  background: var(--accent);
+}
+
+.turnaround-caption {
+  font-size: 1.15rem;
+  font-weight: 600;
+  min-height: 1.5em;
+  text-align: center;
+}
+
+.turnaround-eq {
+  font-size: 1.6rem;
+  font-weight: 700;
+  min-height: 1.3em;
+  text-align: center;
 }

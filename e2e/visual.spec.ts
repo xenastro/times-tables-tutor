@@ -146,7 +146,7 @@ for (const [a, b, ending] of TRICKS) {
     // The trick must not appear before the answer is worked out.
     for (let step = 0; step < 6 && (await page.locator('.guide-expr').isVisible()); step++) {
       await expect(page.locator('.trick')).toHaveCount(0);
-      await page.waitForTimeout(2000); // let the swap / bar animations play
+      await page.waitForTimeout(3500); // let the swap / bar animations play
       if (step === 0) await page.screenshot({ path: `${SHOTS}/t-${a}x${b}-step1.png` });
       const text = ((await page.locator('.guide-expr').getAttribute('data-expr')) ?? '') + ' = ?';
       for (const d of String(solveExpr(text))) await page.locator('.numpad').getByRole('button', { name: d, exact: true }).click();
@@ -155,11 +155,11 @@ for (const [a, b, ending] of TRICKS) {
     await expect(page.locator('.trick')).toBeVisible();
     await page.locator('.trick').scrollIntoViewIfNeeded();
     const start = Date.now();
-    for (const ms of [300, 1300, 2200, 3200, 4500]) {
+    for (const ms of [600, 2600, 4400, 6400, 9000]) {
       await page.waitForTimeout(Math.max(0, ms - (Date.now() - start)));
       await page.locator('.trick').screenshot({ path: `${SHOTS}/t-${a}x${b}-${String(ms).padStart(5, '0')}.png` });
     }
-    await expect(page.locator('.trick-caption')).toHaveText(ending, { timeout: 15_000 });
+    await expect(page.locator('.trick-caption')).toHaveText(ending, { timeout: 45_000 });
     await page.waitForTimeout(800);
     await page.locator('.trick').screenshot({ path: `${SHOTS}/t-${a}x${b}-end.png` });
     // The whole trick stays inside the screen.
@@ -170,3 +170,46 @@ for (const [a, b, ending] of TRICKS) {
     await expect(page.locator('.trick-caption')).not.toHaveText(ending);
   });
 }
+
+test('turnaround short rotates 3 rows of 7 into 7 rows of 3 and fits the screen', async ({ browser, baseURL }) => {
+  test.skip(!baseURL?.includes('5173'), 'the preview page only exists in the dev server');
+  const page = await (await browser.newContext({ viewport: { width: 360, height: 740 } })).newPage();
+  for (const [a, b] of [[3, 7], [4, 12]]) {
+    await page.goto(`/dev/turnaround?a=${a}&b=${b}`);
+    await expect(page.locator('.turnaround-caption')).toHaveText(`${a} rows of ${b}`);
+    await page.locator('.turnaround').screenshot({ path: `${SHOTS}/ta-${a}x${b}-1.png` });
+    await page.waitForTimeout(4500);
+    await page.locator('.turnaround').screenshot({ path: `${SHOTS}/ta-${a}x${b}-2-turning.png` });
+    await expect(page.locator('.turnaround-caption')).toHaveText(`${b} rows of ${a}`, { timeout: 10_000 });
+    await expect(page.locator('.turnaround-caption')).toHaveText('Same blocks, same answer!', { timeout: 10_000 });
+    await expect(page.locator('.turnaround-eq')).toHaveText(`${a} × ${b} = ${b} × ${a} = ${a * b}`);
+    await page.locator('.turnaround').screenshot({ path: `${SHOTS}/ta-${a}x${b}-3-end.png` });
+    const box = (await page.locator('.turnaround-grid').boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(360);
+  }
+});
+
+test('fact map numbers are large enough to read on a small phone', async ({ browser, playwright, baseURL }) => {
+  const request = await playwright.request.newContext({ baseURL });
+  await request.post('/api/auth/signup', {
+    data: { email: `m+${Date.now()}@example.com`, password: 'test password 123', inviteCode: INVITE },
+  });
+  const { learner } = await (await request.post('/api/learners', { data: { displayName: 'Map', settings: {} } })).json();
+  const { code } = await (await request.post(`/api/learners/${learner.id}/pairing-code`)).json();
+  const page = await (await browser.newContext({ viewport: { width: 360, height: 740 } })).newPage();
+  await page.goto('/');
+  await page.getByLabel('Code from your parent').fill(code);
+  await page.getByRole('button', { name: 'Link this phone' }).click();
+  await expect(page.getByRole('heading', { name: 'Hi, Map' })).toBeVisible();
+  await page.goto('/map');
+  // Only 10 × 10 (plus headers) until the bonus rows are unlocked.
+  await expect(page.locator('.factmap button')).toHaveCount(100);
+  const size = await page.locator('.factmap button').first().evaluate((el) => ({
+    w: el.getBoundingClientRect().width,
+    font: parseFloat(getComputedStyle(el).fontSize),
+  }));
+  expect(size.w).toBeGreaterThanOrEqual(24);
+  expect(size.font).toBeGreaterThanOrEqual(12.5);
+  await page.screenshot({ path: `${SHOTS}/m-map-360.png` });
+});

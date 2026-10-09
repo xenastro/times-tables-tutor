@@ -12,7 +12,7 @@ test('parent fact details open as a centred dialog that fits a laptop screen', a
   });
   const { learner } = await (await page.request.post('/api/learners', { data: { displayName: 'Desk', settings: {} } })).json();
   await page.goto(`/parent/child/${learner.id}`);
-  await page.locator('.factmap button').nth(8 * 12 + 6).click();
+  await page.locator('.factmap button').nth(8 * 10 + 6).click();
   const sheet = page.locator('.sheet');
   await expect(sheet).toBeVisible();
   const box = (await sheet.boundingBox())!;

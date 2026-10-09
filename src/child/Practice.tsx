@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BarModel } from '../components/StrategyView';
+import { TurnaroundShow } from '../components/TurnaroundShow';
 import { factBar } from '../engine/guide';
 import { FLUENT_LEVEL } from '../engine/mastery';
 import { CheckupSession, PracticeSession, type Question } from '../engine/session';
@@ -17,6 +18,7 @@ type Phase =
   | { kind: 'guide'; q: Question; mode: GuideMode }
   | { kind: 'feedback'; q: Question; given: number | null; correct: boolean }
   | { kind: 'reveal'; q: Question }
+  | { kind: 'turnaround'; q: Question }
   | { kind: 'break' }
   | { kind: 'summary' };
 
@@ -25,7 +27,7 @@ const MAX_DIGITS = 3;
 const HARD_KINDS = ['new', 'learning', 'retry', 'repeat'];
 
 export function Practice() {
-  const { state, settings, addEvents } = useLearner();
+  const { state, settings, addEvents, events } = useLearner();
 
   // Snapshot what the learner knew at the start, for the summary.
   const [startState] = useState(state);
@@ -44,6 +46,23 @@ export function Practice() {
   const ended = useRef(false);
   const lastBreakAt = useRef(0);
   const mistakes = useRef(new Map<string, number>());
+  // Orientations answered so far ("7x3"), and whether the turnaround tip has been shown.
+  const [seenOrientations] = useState(
+    () =>
+      new Set(
+        events
+          .filter((e) => e.type === 'answer')
+          .map((e) => {
+            const p = e.payload as { a: number; b: number };
+            return `${p.a}x${p.b}`;
+          }),
+      ),
+  );
+  const turnaroundShown = useRef(
+    events.some((e) => e.type === 'tip_shown' && (e.payload as { tip?: string }).tip === 'turnaround'),
+  );
+  const isTurnedAround = (q: Question) =>
+    q.a !== q.b && seenOrientations.has(`${q.b}x${q.a}`) && !seenOrientations.has(`${q.a}x${q.b}`);
   const showBars = settings.pictureHints !== 'off';
 
   const finish = useCallback(() => {
@@ -107,16 +126,28 @@ export function Practice() {
     (q: Question, given: number | null, hintUsed: boolean) => {
       const res = session.record(q, { given, latencyMs: performance.now() - askedAt.current, hintUsed });
       addEvents(res.events);
+      seenOrientations.add(`${q.a}x${q.b}`);
       return res;
     },
-    [addEvents, session],
+    [addEvents, seenOrientations, session],
   );
 
   const submit = useCallback(
     (given: number | null) => {
       if (phase.kind !== 'ask') return;
       const q = phase.q;
+      const turnedAround = !isCheckup && !turnaroundShown.current && isTurnedAround(q);
       const res = record(q, given, false);
+      if (res.correct && turnedAround) {
+        // First time they've got a fact right the other way round: show why that works.
+        turnaroundShown.current = true;
+        setPhase({ kind: 'feedback', q, given, correct: true });
+        window.setTimeout(() => {
+          addEvents([{ type: 'tip_shown', payload: { tip: 'turnaround', a: q.a, b: q.b, sessionId: session.sessionId } }]);
+          setPhase({ kind: 'turnaround', q });
+        }, FEEDBACK_MS);
+        return;
+      }
       if (isCheckup || res.correct) {
         setPhase({ kind: 'feedback', q, given, correct: res.correct });
         window.setTimeout(advance, isCheckup ? 300 : FEEDBACK_MS);
@@ -252,6 +283,17 @@ export function Practice() {
           showBars={showBars}
           onFinish={onGuideFinish}
         />
+      )}
+
+      {phase.kind === 'turnaround' && (
+        <div className="panel">
+          <p className="kicker">{t('turnaround.kicker')}</p>
+          <p className="muted">{t('turnaround.intro')}</p>
+          <TurnaroundShow a={phase.q.b} b={phase.q.a} />
+          <button className="btn btn-primary btn-big" onClick={advance}>
+            {t('common.gotIt')}
+          </button>
+        </div>
       )}
 
       {phase.kind === 'reveal' && (

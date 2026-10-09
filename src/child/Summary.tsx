@@ -72,7 +72,7 @@ export function Summary({
         </p>
       )}
 
-      <section className="card stack">
+      <section className="card stack map-card">
         <FactMap state={state} highlight={movedUp} />
         <Legend />
       </section>

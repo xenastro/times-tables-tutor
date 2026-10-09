@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { FactMap, Legend } from '../components/FactMap';
 import { Sheet } from '../components/FactSheet';
 import { GuideSteps } from '../components/StrategyView';
+import { TurnaroundToggle } from '../components/TurnaroundShow';
 import { factKey } from '../engine/facts';
 import { t } from '../i18n';
 import { goBack } from '../router';
@@ -20,8 +21,8 @@ export function MapScreen() {
         </button>
         <h1 style={{ fontSize: '1.4rem' }}>{t('map.title')}</h1>
       </header>
-      <section className="card stack">
-        <FactMap state={state} showBonus onSelect={(a, b) => setSelected([a, b])} />
+      <section className="card stack map-card">
+        <FactMap state={state} onSelect={(a, b) => setSelected([a, b])} />
         <Legend />
       </section>
       <p className="muted small">{state.activeMax === 12 ? t('home.bonusUnlocked') : t('home.bonusLocked')}</p>
@@ -35,6 +36,7 @@ export function MapScreen() {
             {t(`map.factLevel${fact.level}`)}
           </span>
           <GuideSteps a={selected[0]} b={selected[1]} showBar={settings.pictureHints !== 'off'} />
+          <TurnaroundToggle key={selected.join('x')} a={selected[0]} b={selected[1]} />
         </Sheet>
       )}
     </main>

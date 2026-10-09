@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import type { TrickShow as Show } from '../engine/tricks';
 import { t } from '../i18n';
 
+/** Frame timings are designed at 1×; children follow better at half speed. Keep in step with the CSS transitions. */
+export const PLAYBACK_SLOWDOWN = 2;
+
 /** Plays a token animation once, then offers "Watch again". */
 export function TrickShow({ show }: { show: Show }) {
   const last = show.frames.length - 1;
@@ -11,7 +14,7 @@ export function TrickShow({ show }: { show: Show }) {
 
   useEffect(() => {
     if (finished) return;
-    const id = window.setTimeout(() => setFrame((f) => f + 1), show.frames[frame].ms);
+    const id = window.setTimeout(() => setFrame((f) => f + 1), show.frames[frame].ms * PLAYBACK_SLOWDOWN);
     return () => window.clearTimeout(id);
   }, [frame, finished, run, show]);
 

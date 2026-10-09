@@ -8,7 +8,8 @@ export type EventType =
   | 'hint_shown'
   | 'strategy_viewed'
   | 'feeling'
-  | 'settings_changed';
+  | 'settings_changed'
+  | 'tip_shown';
 
 /** One immutable record in a learner's log. Everything else is derived from these. */
 export interface TutorEvent<P = unknown> {

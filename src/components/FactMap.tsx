@@ -4,8 +4,6 @@ import { t } from '../i18n';
 
 interface Props {
   state: LearnerState;
-  /** Show the 12×12 grid (bonus rows dimmed if still locked). */
-  showBonus?: boolean;
   compact?: boolean;
   /** Keys to animate (facts that just moved up). */
   highlight?: Set<string>;
@@ -14,8 +12,9 @@ interface Props {
   showProductsFrom?: number;
 }
 
-export function FactMap({ state, showBonus, compact, highlight, onSelect, showProductsFrom = 3 }: Props) {
-  const size = showBonus || state.activeMax === 12 ? 12 : 10;
+export function FactMap({ state, compact, highlight, onSelect, showProductsFrom = 3 }: Props) {
+  // ×11 and ×12 only appear once unlocked, so the grid stays roomy on a phone.
+  const size = state.activeMax;
   const cells = [];
   if (!compact) {
     cells.push(<div key="corner" className="hd" aria-hidden="true">×</div>);

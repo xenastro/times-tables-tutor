@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FactMap, Legend } from '../components/FactMap';
 import { Sheet } from '../components/FactSheet';
 import { GuideSteps } from '../components/StrategyView';
+import { TurnaroundToggle } from '../components/TurnaroundShow';
 import { factKey } from '../engine/facts';
 import { activeFacts, DAY, deriveState, fluentCount, median } from '../engine/mastery';
 import { dailyStats, factHistory, feelings, practiceDaysLast7, sessionHistory, troubleFacts } from '../engine/stats';
@@ -144,10 +145,10 @@ export function ChildDetail({ id }: { id: string }) {
       </section>
 
       <div className="grid-2">
-        <section className="card stack">
+        <section className="card stack map-card">
           <h2>{t('parent.map')}</h2>
           <p className="muted small">{t('parent.mapNote')}</p>
-          <FactMap state={state} showBonus onSelect={(a, b) => setSelected([a, b])} showProductsFrom={1} />
+          <FactMap state={state} onSelect={(a, b) => setSelected([a, b])} showProductsFrom={1} />
           <Legend />
         </section>
 
@@ -287,6 +288,7 @@ export function ChildDetail({ id }: { id: string }) {
             </div>
           )}
           <GuideSteps a={selected[0]} b={selected[1]} />
+          <TurnaroundToggle key={selected.join('x')} a={selected[0]} b={selected[1]} />
         </Sheet>
       )}
     </>

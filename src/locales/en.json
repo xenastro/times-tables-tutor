@@ -250,5 +250,14 @@
       "done": "So {a} × {b} = {p}",
       "summary": "9 × {n} = {p}: {tens} is one less than {n}, and {tens} + {ones} = 9."
     }
+  },
+  "turnaround": {
+    "rows": "{rows} rows of {each}",
+    "turn": "Turn it around…",
+    "same": "Same blocks, same answer!",
+    "summary": "{a} rows of {b} turned around is {b} rows of {a}: both make {p}.",
+    "kicker": "Did you know?",
+    "intro": "You have seen this fact the other way around.",
+    "button": "Turn it around"
   }
 }

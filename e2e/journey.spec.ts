@@ -150,7 +150,7 @@ test('parent sets up, child does check-up and practice, parent sees progress', a
   // Map screen and a fact detail
   await child.getByRole('button', { name: 'See your map' }).last().click();
   await shot(child, '11-map');
-  await child.locator('.factmap button').nth(6 * 12 + 7).click();
+  await child.locator('.factmap button').nth(6 * 10 + 7).click();
   await shot(child, '12-fact-sheet');
   await child.getByRole('button', { name: 'Close' }).click();
   await child.goBack();

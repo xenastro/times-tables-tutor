@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ChildApp } from './child/ChildApp';
 import { Guide } from './child/Guide';
+import { TurnaroundShow } from './components/TurnaroundShow';
 import { ParentApp } from './parent/ParentApp';
 import { useRoute } from './router';
 import './styles.css';
@@ -17,9 +18,20 @@ function GuidePreview() {
   );
 }
 
+/** Development-only preview of the turnaround short: /dev/turnaround?a=3&b=7 */
+function TurnaroundPreview() {
+  const q = new URLSearchParams(window.location.search);
+  return (
+    <main className="screen">
+      <TurnaroundShow a={Number(q.get('a') ?? 3)} b={Number(q.get('b') ?? 7)} />
+    </main>
+  );
+}
+
 function App() {
   const path = useRoute();
   if (import.meta.env.DEV && path === '/dev/guide') return <GuidePreview />;
+  if (import.meta.env.DEV && path === '/dev/turnaround') return <TurnaroundPreview />;
   return path.startsWith('/parent') ? <ParentApp path={path} /> : <ChildApp path={path} />;
 }
 
