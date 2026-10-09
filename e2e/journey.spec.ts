@@ -67,7 +67,7 @@ async function playSession(page: Page, answerFor: (a: number, b: number, i: numb
     }
     const q = page.locator('.question');
     const pad = page.locator('.numpad button').first();
-    if ((await q.isVisible()) && (await pad.isEnabled())) {
+    if ((await q.isVisible()) && (await pad.isEnabled({ timeout: 1000 }).catch(() => false))) {
       const text = (await q.textContent()) ?? '';
       const [a, b] = text.split('×').map((s) => Number(s.trim()));
       if (!seen.has('question')) await shot(page, `${shotPrefix}-question`), seen.add('question');
