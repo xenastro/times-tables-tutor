@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FactMap, Legend } from '../components/FactMap';
 import { Sheet } from '../components/FactSheet';
-import { StrategyView } from '../components/StrategyView';
+import { GuideSteps } from '../components/StrategyView';
 import { factKey } from '../engine/facts';
 import { activeFacts, DAY, deriveState, fluentCount, median } from '../engine/mastery';
 import { dailyStats, factHistory, feelings, practiceDaysLast7, sessionHistory, troubleFacts } from '../engine/stats';
@@ -167,8 +167,12 @@ export function ChildDetail({ id }: { id: string }) {
                       {f.a} × {f.b}
                     </strong>
                     <span className="row" style={{ gap: 8 }}>
-                      <span className="pill warm">{t('parent.acc', { pct: Math.round(f.accuracy * 100) })}</span>
-                      <span className="pill">{t('parent.time', { s: seconds(f.medianLatencyMs) })}</span>
+                      <span className={`pill ${f.accuracy < 1 ? 'warm' : 'good'}`}>
+                        {t('parent.acc', { pct: Math.round(f.accuracy * 100) })}
+                      </span>
+                      <span className={`pill ${(f.medianLatencyMs ?? 0) > state.thresholdMs ? 'warm' : ''}`}>
+                        {t('parent.time', { s: seconds(f.medianLatencyMs) })}
+                      </span>
                     </span>
                   </button>
                 ))}
@@ -282,7 +286,7 @@ export function ChildDetail({ id }: { id: string }) {
               ))}
             </div>
           )}
-          <StrategyView a={selected[0]} b={selected[1]} />
+          <GuideSteps a={selected[0]} b={selected[1]} />
         </Sheet>
       )}
     </>

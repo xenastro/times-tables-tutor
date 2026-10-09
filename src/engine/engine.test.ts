@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { allFacts, factKey, groupOf, homeTable, teachingOrder } from './facts';
 import { DAY, deriveState, FLUENT_LEVEL, fluentCount } from './mastery';
 import { CheckupSession, PracticeSession, type Question } from './session';
-import { strategyFor } from './strategies';
+import { evaluate, factBar, guideFor } from './guide';
 import { dailyStats, practiceDaysLast7, troubleFacts } from './stats';
 import { withDefaults, type AnswerPayload, type LearnerSettings, type TutorEvent } from './types';
 
@@ -100,24 +100,44 @@ describe('facts', () => {
   });
 });
 
-/* ---------- strategies ---------- */
+/* ---------- guides ---------- */
 
-describe('strategies', () => {
-  it('picks a sensible strategy for each hard fact', () => {
-    expect(strategyFor(6, 7)).toMatchObject({ kind: 'fivePlusOne', vars: { five: 35 }, product: 42 });
-    expect(strategyFor(8, 7)).toMatchObject({ kind: 'fiveSixSevenEight', product: 56 });
-    expect(strategyFor(7, 7)).toMatchObject({ kind: 'fivePlusTwo', vars: { five: 35, two: 14 } });
-    expect(strategyFor(4, 6)).toMatchObject({ kind: 'doubleDouble', vars: { d1: 12 } });
-    expect(strategyFor(9, 6)).toMatchObject({ kind: 'tenMinusOne', vars: { ten: 60 } });
-    expect(strategyFor(12, 12)).toMatchObject({ kind: 'tenPlusTwo', vars: { ten: 120, two: 24 } });
+describe('guides', () => {
+  it('picks a sensible method for each hard fact', () => {
+    expect(guideFor(6, 7).kind).toBe('fivePlusOne');
+    expect(guideFor(7, 8).kind).toBe('doubleThreeTimes');
+    expect(guideFor(7, 8).steps.at(-1)!.note).toBe('sevenEightTrick');
+    expect(guideFor(7, 7).kind).toBe('fivePlusTwo');
+    expect(guideFor(4, 6).kind).toBe('doubleDouble');
+    expect(guideFor(9, 6).kind).toBe('tenMinusOne');
+    expect(guideFor(12, 12).kind).toBe('tenPlusTwo');
   });
 
-  it('draws pictures whose bands add up to the number of rows', () => {
+  it('keeps numbers in their place when swapping a factor', () => {
+    expect(guideFor(5, 3).steps[0].expr).toEqual({ op: 'times', x: 10, y: 3 });
+    expect(guideFor(3, 5).steps[0].expr).toEqual({ op: 'times', x: 3, y: 10 });
+    expect(guideFor(7, 6).steps[0].expr).toEqual({ op: 'times', x: 7, y: 5 });
+  });
+
+  it('every step is correct arithmetic and every guide ends on the fact itself', () => {
     for (const f of allFacts(12)) {
-      const s = strategyFor(f.a, f.b);
-      expect(s.groups * s.size - (s.kind === 'tenMinusOne' ? s.size : 0)).toBe(
-        s.kind === 'halfOf10' ? s.product : f.a * f.b,
-      );
+      for (const [a, b] of [[f.a, f.b], [f.b, f.a]]) {
+        const g = guideFor(a, b);
+        for (const s of g.steps) {
+          expect(s.answer).toBe(evaluate(s.expr));
+          expect(Number.isInteger(s.answer)).toBe(true);
+          expect(s.bar.segments.length).toBeLessThanOrEqual(12);
+        }
+        expect(g.steps.at(-1)!.answer).toBe(a * b);
+        expect(g.steps.length).toBeLessThanOrEqual(4);
+      }
+    }
+  });
+
+  it('draws the fact as groups that add up to the product', () => {
+    for (const f of allFacts(12)) {
+      const bar = factBar(f.a, f.b);
+      expect(bar.size * bar.segments.length).toBe(f.a * f.b);
     }
   });
 });

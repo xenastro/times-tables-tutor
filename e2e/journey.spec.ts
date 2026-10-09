@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { solveExpr, tapNumber } from './helpers';
 
 const INVITE = process.env.INVITE_CODE ?? 'family-test';
 const SHOTS = process.env.SHOTS_DIR ?? 'e2e-results/shots';
@@ -7,9 +8,7 @@ async function shot(page: Page, name: string) {
   await page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: false });
 }
 
-async function tapNumber(page: Page, n: number) {
-  for (const d of String(n)) await page.locator('.numpad').getByRole('button', { name: d, exact: true }).click();
-}
+let wrongGuideStepDone = false;
 
 /**
  * Plays a session until the summary appears. `answerFor` decides what to type for a question
@@ -28,10 +27,34 @@ async function playSession(page: Page, answerFor: (a: number, b: number, i: numb
       await keepGoing.click();
       continue;
     }
+    // Step-by-step guide: answer each in-between step (once, deliberately wrong first).
+    const guideExpr = page.locator('.guide-expr');
+    if ((await guideExpr.isVisible()) && (await page.locator('.numpad button').first().isEnabled())) {
+      const text = (await guideExpr.textContent()) ?? '';
+      if (text.includes('?')) {
+        if (!seen.has('guide')) await shot(page, shotPrefix + "-guide"), seen.add("guide");
+        const ans = solveExpr(text);
+        if (!wrongGuideStepDone) {
+          wrongGuideStepDone = true;
+          await tapNumber(page, ans === 1 ? 2 : ans - 1);
+          if (String(ans - 1).length < String(ans).length) await page.getByRole('button', { name: 'Check' }).click();
+          await expect(page.getByText(/Type \d+ to keep going/)).toBeVisible();
+          await shot(page, shotPrefix + "-guide-wrong-step");
+        }
+        await tapNumber(page, ans);
+        await page.waitForTimeout(450);
+        continue;
+      }
+    }
+    const backToPractice = page.getByRole('button', { name: 'Back to practice' });
+    if (await backToPractice.isVisible()) {
+      if (!seen.has('guide-done')) await shot(page, shotPrefix + "-guide-done"), seen.add("guide-done");
+      await backToPractice.click();
+      continue;
+    }
     const gotIt = page.getByRole('button', { name: 'Got it' });
     if (await gotIt.isVisible()) {
-      const kicker = (await page.locator('.kicker').first().textContent().catch(() => '')) ?? '';
-      const tag = kicker.includes('New') ? 'new-fact' : 'reveal';
+      const tag = (await page.locator('.guide').isVisible()) ? 'mistake-guide-done' : 'reveal';
       if (!seen.has(tag)) await shot(page, `${shotPrefix}-${tag}`), seen.add(tag);
       await gotIt.click();
       continue;

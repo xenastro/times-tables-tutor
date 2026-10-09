@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { FactMap, Legend } from '../components/FactMap';
 import { Sheet } from '../components/FactSheet';
-import { StrategyView } from '../components/StrategyView';
+import { GuideSteps } from '../components/StrategyView';
 import { factKey } from '../engine/facts';
 import { t } from '../i18n';
 import { goBack } from '../router';
@@ -34,7 +34,7 @@ export function MapScreen() {
           <span className={`pill ${fact.level >= 3 ? 'good' : fact.level >= 1 ? 'warm' : ''}`} style={{ alignSelf: 'flex-start' }}>
             {t(`map.factLevel${fact.level}`)}
           </span>
-          <StrategyView a={selected[0]} b={selected[1]} showPicture={settings.pictureHints !== 'off'} />
+          <GuideSteps a={selected[0]} b={selected[1]} showBar={settings.pictureHints !== 'off'} />
         </Sheet>
       )}
     </main>

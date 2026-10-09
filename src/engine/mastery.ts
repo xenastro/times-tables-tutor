@@ -131,7 +131,8 @@ export function deriveState(events: TutorEvent[], settings: LearnerSettings): Le
     push(f.recentResults, p.correct);
     if (p.correct) {
       f.correct++;
-      push(f.recentLatencies, p.latencyMs);
+      // Time spent reading a hint isn't recall speed.
+      if (!p.hinted) push(f.recentLatencies, p.latencyMs);
     }
 
     if (p.mode === 'calibration' && p.correct) {

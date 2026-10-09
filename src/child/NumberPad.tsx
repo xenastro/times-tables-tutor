@@ -4,13 +4,16 @@ export function NumberPad({
   onPress,
   disabled,
   canSubmit,
+  compact,
 }: {
   onPress: (key: string) => void;
   disabled: boolean;
   canSubmit: boolean;
+  /** Shorter keys, to leave room for a guide above. */
+  compact?: boolean;
 }) {
   return (
-    <div className="numpad" role="group" aria-label="Number pad">
+    <div className={`numpad${compact ? ' compact' : ''}`} role="group" aria-label="Number pad">
       {KEYS.map((k) => (
         <button
           key={k}

@@ -28,7 +28,7 @@ export function dailyStats(events: TutorEvent[], now: number, days = 14): DaySta
       bucket.answers++;
       if (p.correct) {
         bucket.correct++;
-        bucket.lat.push(p.latencyMs);
+        if (!p.hinted) bucket.lat.push(p.latencyMs);
       }
     } else if (e.type === 'session_end') {
       bucket.ms += (e.payload as SessionEndPayload).durationMs;

@@ -1,18 +1,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DotPicture, StrategyView } from '../components/StrategyView';
+import { BarModel } from '../components/StrategyView';
+import { factBar } from '../engine/guide';
+import { FLUENT_LEVEL } from '../engine/mastery';
 import { CheckupSession, PracticeSession, type Question } from '../engine/session';
-import { strategyFor } from '../engine/strategies';
 import { newId } from '../data/api';
 import { t } from '../i18n';
 import { navigate } from '../router';
+import { Guide, type GuideMode } from './Guide';
 import { useLearner } from './LearnerContext';
 import { NumberPad } from './NumberPad';
 import { Summary } from './Summary';
 
 type Phase =
   | { kind: 'intro' }
-  | { kind: 'strategy'; q: Question }
   | { kind: 'ask'; q: Question }
+  | { kind: 'guide'; q: Question; mode: GuideMode }
   | { kind: 'feedback'; q: Question; given: number | null; correct: boolean }
   | { kind: 'reveal'; q: Question }
   | { kind: 'break' }
@@ -20,6 +22,7 @@ type Phase =
 
 const FEEDBACK_MS = 450;
 const MAX_DIGITS = 3;
+const HARD_KINDS = ['new', 'learning', 'retry', 'repeat'];
 
 export function Practice() {
   const { state, settings, addEvents } = useLearner();
@@ -35,13 +38,13 @@ export function Practice() {
   const isCheckup = session instanceof CheckupSession;
   const [phase, setPhase] = useState<Phase>(isCheckup && !state.checkup.started ? { kind: 'intro' } : { kind: 'break' });
   const [input, setInput] = useState('');
-  const [hintOpen, setHintOpen] = useState(false);
-  const hintUsed = useRef(false);
   const askedAt = useRef(0);
   const startedAt = useRef(Date.now());
   const started = useRef(false);
   const ended = useRef(false);
   const lastBreakAt = useRef(0);
+  const mistakes = useRef(new Map<string, number>());
+  const showBars = settings.pictureHints !== 'off';
 
   const finish = useCallback(() => {
     if (ended.current) return;
@@ -77,11 +80,9 @@ export function Practice() {
       return;
     }
     setInput('');
-    setHintOpen(false);
-    hintUsed.current = false;
     if (q.showStrategyFirst) {
       addEvents([{ type: 'strategy_viewed', payload: { a: q.a, b: q.b, sessionId: session.sessionId } }]);
-      setPhase({ kind: 'strategy', q });
+      setPhase({ kind: 'guide', q, mode: 'new' });
     } else {
       setPhase({ kind: 'ask', q });
     }
@@ -96,26 +97,43 @@ export function Practice() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Time each question from the moment it's on screen.
+  // Time each question from the moment it's on screen (a guide for a new fact counts too).
   useEffect(() => {
-    if (phase.kind === 'ask') askedAt.current = performance.now();
-  }, [phase]);
+    if (phase.kind === 'ask' || (phase.kind === 'guide' && phase.mode === 'new')) askedAt.current = performance.now();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase.kind]);
+
+  const record = useCallback(
+    (q: Question, given: number | null, hintUsed: boolean) => {
+      const res = session.record(q, { given, latencyMs: performance.now() - askedAt.current, hintUsed });
+      addEvents(res.events);
+      return res;
+    },
+    [addEvents, session],
+  );
 
   const submit = useCallback(
     (given: number | null) => {
       if (phase.kind !== 'ask') return;
       const q = phase.q;
-      const latencyMs = performance.now() - askedAt.current;
-      const res = session.record(q, { given, latencyMs, hintUsed: hintUsed.current });
-      addEvents(res.events);
+      const res = record(q, given, false);
       if (isCheckup || res.correct) {
         setPhase({ kind: 'feedback', q, given, correct: res.correct });
         window.setTimeout(advance, isCheckup ? 300 : FEEDBACK_MS);
-      } else {
-        setPhase({ kind: 'reveal', q });
+        return;
+      }
+      // A first slip on a fact they already know: just show the answer (with an optional walkthrough).
+      // Otherwise, work it out together.
+      const count = (mistakes.current.get(q.key) ?? 0) + 1;
+      mistakes.current.set(q.key, count);
+      const known = startState.facts[q.key].level >= FLUENT_LEVEL;
+      if (known && count === 1) setPhase({ kind: 'reveal', q });
+      else {
+        addEvents([{ type: 'strategy_viewed', payload: { a: q.a, b: q.b, sessionId: session.sessionId } }]);
+        setPhase({ kind: 'guide', q, mode: 'mistake' });
       }
     },
-    [addEvents, advance, isCheckup, phase, session],
+    [addEvents, advance, isCheckup, phase, record, session.sessionId, startState],
   );
 
   const press = useCallback(
@@ -137,20 +155,29 @@ export function Practice() {
     [input, phase, submit],
   );
 
-  // Physical keyboard support (handy on a laptop).
+  // Physical keyboard support (the guide handles its own keys).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (/^\d$/.test(e.key)) press(e.key);
       else if (e.key === 'Backspace') press('back');
       else if (e.key === 'Enter') {
         if (phase.kind === 'ask') press('enter');
-        else if (phase.kind === 'strategy') setPhase({ kind: 'ask', q: phase.q });
         else if (phase.kind === 'reveal') advance();
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [advance, phase, press]);
+
+  const onGuideFinish = useCallback(
+    (firstFinalTry: number) => {
+      if (phase.kind !== 'guide') return;
+      // For a new fact or a hint, the guide's last step *is* the answer to the question.
+      if (phase.mode !== 'mistake') record(phase.q, firstFinalTry, true);
+      advance();
+    },
+    [advance, phase, record],
+  );
 
   const progress = useMemo(() => {
     if (session instanceof CheckupSession) {
@@ -173,9 +200,8 @@ export function Practice() {
     );
   }
 
-  const showHintButton = !isCheckup && phase.kind === 'ask';
   const alwaysPicture =
-    settings.pictureHints === 'always' && phase.kind === 'ask' && ['new', 'learning', 'retry', 'repeat'].includes(phase.q.kind);
+    settings.pictureHints === 'always' && phase.kind === 'ask' && HARD_KINDS.includes(phase.q.kind);
 
   return (
     <main className="practice">
@@ -217,27 +243,26 @@ export function Practice() {
         </div>
       )}
 
-      {phase.kind === 'strategy' && (
-        <div className="panel">
-          <p className="kicker">{t('practice.newFact')}</p>
-          <p className="fact num">
-            {phase.q.a} × {phase.q.b} = {phase.q.a * phase.q.b}
-          </p>
-          <p className="muted">{t('practice.newFactNote')}</p>
-          <StrategyView a={phase.q.a} b={phase.q.b} showPicture={settings.pictureHints !== 'off'} />
-          <button className="btn btn-primary btn-big" onClick={() => setPhase({ kind: 'ask', q: phase.q })}>
-            {t('common.gotIt')}
-          </button>
-        </div>
+      {phase.kind === 'guide' && (
+        <Guide
+          key={`${phase.q.key}-${phase.mode}-${session.answered}`}
+          a={phase.q.a}
+          b={phase.q.b}
+          mode={phase.mode}
+          showBars={showBars}
+          onFinish={onGuideFinish}
+        />
       )}
 
       {phase.kind === 'reveal' && (
         <div className="panel">
           <p className="fact num">{t('practice.reveal', { a: phase.q.a, b: phase.q.b, p: phase.q.a * phase.q.b })}</p>
           <p className="muted">{t('practice.revealNote')}</p>
-          <StrategyView a={phase.q.a} b={phase.q.b} showPicture={settings.pictureHints !== 'off'} />
           <button className="btn btn-primary btn-big" onClick={advance} autoFocus>
             {t('common.gotIt')}
+          </button>
+          <button className="btn btn-big" onClick={() => setPhase({ kind: 'guide', q: phase.q, mode: 'mistake' })}>
+            {t('guide.showMe')}
           </button>
         </div>
       )}
@@ -258,17 +283,15 @@ export function Practice() {
             >
               {phase.kind === 'feedback' ? (phase.given ?? '–') : input}
             </div>
-            {hintOpen && phase.kind === 'ask' && <StrategyView a={phase.q.a} b={phase.q.b} showPicture={settings.pictureHints !== 'off'} />}
-            {alwaysPicture && !hintOpen && <DotPicture strategy={strategyFor(phase.q.a, phase.q.b)} />}
+            {alwaysPicture && <BarModel bar={factBar(phase.q.a, phase.q.b)} compact />}
           </div>
           <div className="hint-row">
-            {showHintButton && !hintOpen && (
+            {!isCheckup && phase.kind === 'ask' && (
               <button
                 className="btn btn-ghost"
                 onClick={() => {
-                  hintUsed.current = true;
-                  setHintOpen(true);
                   addEvents([{ type: 'hint_shown', payload: { a: phase.q.a, b: phase.q.b, sessionId: session.sessionId } }]);
+                  setPhase({ kind: 'guide', q: phase.q, mode: 'hint' });
                 }}
               >
                 💡 {t('practice.hint')}
