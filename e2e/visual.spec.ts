@@ -76,7 +76,7 @@ test('standard learner light mode: hint button and map sheet', async ({ browser,
   // Answer the check-up correctly so practice starts with reviews and new facts.
   while (!(await page.getByRole('button', { name: 'Back home' }).isVisible())) {
     const q = page.locator('.question');
-    if ((await q.isVisible()) && (await page.locator('.numpad button').first().isEnabled())) {
+    if ((await q.isVisible()) && (await page.locator('.numpad button').first().isEnabled({ timeout: 1000 }).catch(() => false))) {
       const [a, b] = ((await q.textContent()) ?? '').split('×').map((s) => Number(s.trim()));
       const ans = a === 7 || b === 7 ? null : a * b;
       if (ans === null) await page.getByRole('button', { name: 'Not sure yet' }).click();

@@ -29,7 +29,7 @@ async function playSession(page: Page, answerFor: (a: number, b: number, i: numb
     }
     // Step-by-step guide: answer each in-between step (once, deliberately wrong first).
     const guideExpr = page.locator('.guide-expr');
-    if ((await guideExpr.isVisible()) && (await page.locator('.numpad button').first().isEnabled())) {
+    if ((await guideExpr.isVisible()) && (await page.locator('.numpad button').first().isEnabled({ timeout: 1000 }).catch(() => false))) {
       const text = ((await guideExpr.getAttribute('data-expr')) ?? '') + ' = ?';
       if (text.includes('?')) {
         if (!seen.has('guide')) await shot(page, shotPrefix + "-guide"), seen.add("guide");
