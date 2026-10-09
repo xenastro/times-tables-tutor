@@ -71,7 +71,8 @@ export function TurnaroundShow({ a, b }: { a: number; b: number }) {
 /** For fact details: a button that plays the turnaround short. */
 export function TurnaroundToggle({ a, b }: { a: number; b: number }) {
   const [open, setOpen] = useState(false);
-  if (a === b) return null;
+  // Turning a single row (× 1) or a square shows nothing new.
+  if (a === b || Math.min(a, b) < 2) return null;
   return open ? (
     <TurnaroundShow a={a} b={b} />
   ) : (

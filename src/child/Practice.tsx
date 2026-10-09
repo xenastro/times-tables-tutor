@@ -62,7 +62,7 @@ export function Practice() {
     events.some((e) => e.type === 'tip_shown' && (e.payload as { tip?: string }).tip === 'turnaround'),
   );
   const isTurnedAround = (q: Question) =>
-    q.a !== q.b && seenOrientations.has(`${q.b}x${q.a}`) && !seenOrientations.has(`${q.a}x${q.b}`);
+    q.a !== q.b && Math.min(q.a, q.b) >= 2 && seenOrientations.has(`${q.b}x${q.a}`) && !seenOrientations.has(`${q.a}x${q.b}`);
   const showBars = settings.pictureHints !== 'off';
 
   const finish = useCallback(() => {
