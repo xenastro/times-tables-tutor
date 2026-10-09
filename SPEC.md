@@ -1,6 +1,6 @@
 # Times Tables Tutor — Product Spec
 
-> **Status:** Draft v0.1 · 2026-10-09
+> **Status:** v0.2 · 2026-10-10 · first release live at math.aburaddad.com
 > **Name:** placeholder. Our first learner will choose the real name after trying the app.
 
 ## 1. Goal
@@ -16,7 +16,7 @@ Help children build lasting, low-stress fluency with the multiplication tables. 
 These rules apply to every design decision.
 
 1. **Shrink the job.** 3×7 and 7×3 count as one fact, so 10×10 is **55 facts**. ×0, ×1 and ×10 are taught as rules. ×2, ×5 and ×9 are taught as patterns. That leaves about 15 genuinely hard facts, and the app says so.
-2. **A strategy before memorising.** Each hard fact comes with a way to work it out: ×4 is double-double, ×8 is double-double-double, ×6 is ×5 plus one group, ×3 is ×2 plus one group, and 7×8 = 56 is "5, 6, 7, 8". Strategies are shown as area models, rectangles of dots.
+2. **A strategy before memorising.** Each hard fact comes with a way to work it out: ×4 is double-double, ×8 is double-double-double, ×6 is ×5 plus one group, ×3 is ×2 plus one group, and 7×8 = 56 is "5, 6, 7, 8". Strategies are taught as step-by-step guides with bar models (§4.6), never as grids of dots too big to count.
 3. **Mostly success.** New facts are mixed in among facts she already knows (incremental rehearsal, roughly 1 new to 8 known). The target success rate in a session is **85% or more**. If accuracy drops, the session stops adding new facts.
 4. **Spaced repetition per fact.** Each fact moves through levels with growing review gaps (§4.3).
 5. **Speed is measured, never shown.** There are no countdowns and no "beat the clock". Response time is recorded so the app can tell instant recall from counting.
@@ -42,7 +42,7 @@ These rules apply to every design decision.
 - **Typing calibration.** Answers to the trivial facts (×1, ×10) measure how fast this learner types on this phone. That baseline sets their personal fluency threshold (§4.3).
 
 ### 4.2 Daily session
-- **Contents:** facts due for review first. Then up to 2–3 **new** facts, each introduced with a strategy card. Each new fact is woven in among known facts, and the facts are interleaved.
+- **Contents:** facts due for review first. Then up to 2–3 **new** facts, each introduced with a guide (§4.6). Each new fact is woven in among known facts, and the facts are interleaved.
 - **Both orders are asked** (7×3 and 3×7), but they share one mastery record.
 - **Ends on a correct answer,** then shows a short summary, such as how many facts moved up, and a fact-map animation.
 - **Optional one-tap check-in at the end:** "How did that feel?" 😌 🙂 😣. This lets us watch for anxiety, not just accuracy.
@@ -81,7 +81,15 @@ Settings are set by the parent, with defaults by age:
 
 Younger profiles default to read-aloud on, pictures always shown, and only ×10, ×2 and ×5.
 
-### 4.6 Motivation
+### 4.6 Explanations: guides, shorts and tips
+- **Guides ("let's work it out together").** Used for a new fact, the hint button and a mistake. The method is split into baby steps and the learner types every in-between answer (5 × 3 → 10 × 3 = 30 → half of 30 = 15). A step can't be skipped: a wrong step shows the right number and the learner types it. A bar model under each step shows the groups being added, taken away or halved.
+- **Numbers keep their position.** When a factor is swapped, it changes in place (5 × 3 → 10 × 3, never 3 × 10), and the old number visibly flips into the new one.
+- **Animated shorts.** 7 × 8 ("5, 6, 7, 8", ending with 8 × 7 when asked that way), ×10 (the digits move up a place), ×11 (the digit is copied) and ×9 (one less, digits add to 9). A short plays only after the learner has worked out the answer, and can be replayed.
+- **Turnaround tip.** The first time a learner answers a fact correctly the other way round (both factors 2 or more and clearly different, like 3 × 7 after 7 × 3), a short turns 3 rows of 7 into 7 rows of 3. Shown once; also available from the fact map.
+- **Half speed.** Every animation is designed at 1× and played at half speed. Motion is used only where it explains something.
+- **Answers are never given away early,** and a hinted or guided answer never counts as fluent.
+
+### 4.7 Motivation
 - The fact map is the main reward.
 - The streak is a **forgiving streak**, counted as "5 of the last 7 days" rather than consecutive days, so one missed day doesn't wipe it.
 - Personal bests.
@@ -92,8 +100,8 @@ Younger profiles default to read-aloud on, pictures always shown, and only ×10,
 
 **Child (phone, used with one thumb):**
 1. **Home:** avatar, "Start today's practice" button, mini fact map, streak.
-2. **Practice:** large question in the top half and a large custom number pad in the bottom half (no system keyboard). A hint button shows the strategy card.
-3. **Strategy card:** an area-model picture plus one sentence for the strategy.
+2. **Practice:** large question in the top half and a large custom number pad in the bottom half (no system keyboard). A hint button opens the guide.
+3. **Guide:** the method in baby steps, with a bar model and, for some facts, an animated short at the end (§4.6).
 4. **Fact map:** the full 10×10 (or 12×12) grid. Tapping a cell shows that fact's history and its strategy.
 5. **Session summary.**
 
@@ -173,13 +181,13 @@ Younger profiles default to read-aloud on, pictures always shown, and only ×10,
 
 ## 9. Release plan
 
-**First release:**
+**First release (live):**
 - parent accounts
 - child profiles and phone linking
 - check-up
 - daily sessions
-- strategy cards
-- fact map
+- step-by-step guides with bar models, animated shorts and the turnaround tip
+- fact map (10×10, with ×11 and ×12 unlocking later)
 - forgiving streak
 - offline sync
 - parent dashboard
@@ -188,7 +196,6 @@ Younger profiles default to read-aloud on, pictures always shown, and only ×10,
 **1.1:**
 - missing-number questions (`__ × 7 = 56`) as a first step into division
 - read-aloud
-- ×11 and ×12 unlock
 - one or two low-pressure game modes
 
 **1.2:** The full **Understand** path for younger learners: equal groups, arrays and skip-counting lessons before practice.
