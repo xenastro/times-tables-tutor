@@ -17,10 +17,12 @@ interface Props {
 export function FactMap({ state, showBonus, compact, highlight, onSelect, showProductsFrom = 3 }: Props) {
   const size = showBonus || state.activeMax === 12 ? 12 : 10;
   const cells = [];
-  cells.push(<div key="corner" className="hd" aria-hidden="true">×</div>);
-  for (let b = 1; b <= size; b++) cells.push(<div key={`h${b}`} className="hd">{b}</div>);
+  if (!compact) {
+    cells.push(<div key="corner" className="hd" aria-hidden="true">×</div>);
+    for (let b = 1; b <= size; b++) cells.push(<div key={`h${b}`} className="hd">{b}</div>);
+  }
   for (let a = 1; a <= size; a++) {
-    cells.push(<div key={`r${a}`} className="hd">{a}</div>);
+    if (!compact) cells.push(<div key={`r${a}`} className="hd">{a}</div>);
     for (let b = 1; b <= size; b++) {
       const key = factKey(a, b);
       const f = state.facts[key];
@@ -42,7 +44,7 @@ export function FactMap({ state, showBonus, compact, highlight, onSelect, showPr
     }
   }
   return (
-    <div className={`factmap${compact ? ' compact' : ''}`} style={{ gridTemplateColumns: `repeat(${size + 1}, 1fr)` }}>
+    <div className={`factmap${compact ? ' compact' : ''}`} style={{ gridTemplateColumns: `repeat(${compact ? size : size + 1}, 1fr)` }}>
       {cells}
     </div>
   );

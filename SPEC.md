@@ -62,14 +62,14 @@ Each fact has a level from 0 to 5. The level sets when it is next shown and its 
 
 - **A correct, fluent answer** moves the fact up one level. "Fluent" means correct and within the learner's threshold: about 2.5 s above their typing baseline (configurable).
 - **A correct but slow answer** keeps the fact at its level.
-- **A wrong answer** moves it down to level 1.
+- **A wrong answer** moves it down to level 1. A slip on a well-known fact (level 4 or 5, often a typo) only drops it to level 2.
 - **Exact gaps and thresholds** are settings, so they can be tuned with real data.
 - **Red is never used.**
 
 ### 4.4 Teaching order
 The usual school order: ×10 and ×2, then ×5, then ×3, ×4 and ×8, then ×6, ×7 and ×9.
 
-The map starts at **10×10**. Once 10×10 is mostly green, **"bonus rows" ×11 and ×12 unlock**. That brings the total to 78 facts, and the extra ones are mostly easy.
+The map starts at **10×10**. Once every 10×10 fact has been started and 80% are fluent, **"bonus rows" ×11 and ×12 unlock**. That brings the total to 78 facts, and the extra ones are mostly easy.
 
 ### 4.5 Per-learner settings
 Settings are set by the parent, with defaults by age:

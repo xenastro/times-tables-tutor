@@ -467,6 +467,8 @@ label.field {
 .factmap .cell.pop { animation: pop 0.6s ease 1; }
 
 .factmap.compact {
+  max-width: 220px;
+  margin-inline: auto;
   gap: 2px;
 }
 
@@ -661,6 +663,8 @@ label.field {
 }
 
 .dots {
+  display: block;
+  margin-inline: auto;
   width: 100%;
   max-height: 34dvh;
 }
