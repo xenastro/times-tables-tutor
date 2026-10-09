@@ -6,7 +6,7 @@ import { hashPassword, randomDigits, randomToken, sha256, verifyPassword } from 
 interface Env {
   DB: D1Database;
   ASSETS: Fetcher;
-  /** When set, sign-up requires this code. */
+  /** Sign-up requires this code; without it, sign-up is closed. */
   INVITE_CODE?: string;
 }
 
@@ -151,7 +151,8 @@ app.post('/auth/signup', async (c) => {
   const email = typeof b.email === 'string' ? b.email.trim().toLowerCase() : '';
   if (!validEmail(email)) return bad(c, 'invalid_email');
   if (typeof b.password !== 'string' || b.password.length < 8 || b.password.length > 200) return bad(c, 'weak_password');
-  if (c.env.INVITE_CODE && (b.inviteCode ?? '').trim() !== c.env.INVITE_CODE) return bad(c, 'invalid_invite', 403);
+  // Sign-up is closed unless an invite code is configured, and then requires it.
+  if (!c.env.INVITE_CODE || (b.inviteCode ?? '').trim() !== c.env.INVITE_CODE) return bad(c, 'invalid_invite', 403);
 
   const exists = await c.env.DB.prepare('SELECT 1 FROM parents WHERE email = ?').bind(email).first();
   if (exists) return bad(c, 'email_taken', 409);

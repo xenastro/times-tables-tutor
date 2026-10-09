@@ -7,3 +7,4 @@ dev-dist/
 .DS_Store
 e2e-results/
 .claude/
+PRODUCTION_INVITE_CODE.txt
