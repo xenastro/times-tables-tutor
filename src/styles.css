@@ -970,32 +970,6 @@ table.simple th {
   }
 }
 
-/* ---------------------------------------------------------------- bar model */
-.bar-model {
-  display: block;
-  width: 100%;
-  height: auto;
-  margin-inline: auto;
-  flex: none;
-}
-
-.bar-model text {
-  font-family: var(--font);
-  font-size: 17px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.bar-model .seg-a rect { fill: var(--accent); }
-.bar-model .seg-a text { fill: var(--accent-ink); }
-.bar-model .seg-b rect { fill: var(--lv1); }
-.bar-model .seg-b text { fill: var(--lv-ink); }
-.bar-model .seg-faded rect { fill: var(--surface-2); }
-.bar-model .seg-faded text { fill: var(--ink-3); }
-.bar-model .seg-removed rect { fill: none; stroke: var(--ink-3); stroke-width: 1.5; }
-.bar-model .seg-removed text { fill: var(--ink-3); }
-.bar-model .seg-removed line { stroke: var(--ink-3); stroke-width: 2; }
-
 /* ---------------------------------------------------------------- guide */
 .guide {
   flex: 1;
@@ -1125,4 +1099,187 @@ table.simple th {
 .guide-done-row .pill {
   font-size: 0.95rem;
   padding: 4px 10px;
+}
+
+/* ---------------------------------------------------------------- bar model */
+.bar-model {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  flex: none;
+}
+
+.bar-model .seg {
+  flex: 0 1 46px;
+  min-width: 0;
+  height: 40px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  position: relative;
+  font-weight: 700;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+  background: var(--accent);
+  color: var(--accent-ink);
+  transition:
+    background-color 0.45s ease,
+    color 0.45s ease,
+    opacity 0.45s ease,
+    transform 0.45s ease;
+}
+
+.bar-model.compact .seg {
+  flex-basis: 34px;
+  height: 30px;
+  font-size: 0.9rem;
+}
+
+.bar-model .seg-b {
+  background: var(--lv1);
+  color: var(--lv-ink);
+}
+
+/* The half we don't need sinks back. */
+.bar-model .seg-faded {
+  background: var(--surface-2);
+  color: var(--ink-3);
+  transform: scale(0.9);
+}
+
+/* Taken away: dashed outline and a line drawn through it. */
+.bar-model .seg-removed {
+  background: transparent;
+  color: var(--ink-3);
+  outline: 2px dashed var(--ink-3);
+  outline-offset: -2px;
+}
+
+.bar-model .seg-removed::after {
+  content: '';
+  position: absolute;
+  inset: 50% 6px auto;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--ink-2);
+  transform: rotate(-35deg) scaleX(1);
+  animation: strike 0.5s ease 0.2s both;
+}
+
+/* New blocks pop in one after another. */
+.bar-model .seg.enter {
+  animation: seg-in 0.42s cubic-bezier(0.3, 1.4, 0.5, 1) var(--d) both;
+}
+
+@keyframes seg-in {
+  from {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.4);
+  }
+}
+
+@keyframes strike {
+  from {
+    transform: rotate(-35deg) scaleX(0);
+  }
+}
+
+/* ---------------------------------------------------------------- swap: old number flips to the new one */
+.swap {
+  display: inline-grid;
+  vertical-align: baseline;
+}
+
+.swap > span {
+  grid-area: 1 / 1;
+  text-align: center;
+}
+
+.swap-old {
+  color: var(--ink-3);
+  animation: swap-out 0.5s ease 0.5s both;
+}
+
+.swap-new {
+  color: var(--accent-text);
+  animation: swap-in 0.5s cubic-bezier(0.3, 1.4, 0.5, 1) 0.85s both;
+}
+
+@keyframes swap-out {
+  to {
+    opacity: 0;
+    transform: translateY(-0.7em) scale(0.6);
+  }
+}
+
+@keyframes swap-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.7em) scale(0.6);
+  }
+}
+
+/* ---------------------------------------------------------------- correct answer pop */
+.answer-box.good,
+.guide-input.good {
+  animation: correct-pop 0.35s ease;
+}
+
+@keyframes correct-pop {
+  40% {
+    transform: scale(1.18);
+  }
+}
+
+/* ---------------------------------------------------------------- animated tricks ("shorts") */
+.trick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0 4px;
+  width: 100%;
+}
+
+.trick-row {
+  --slot: 0.72em;
+  position: relative;
+  /* Big, but always fits the screen however many tokens there are. */
+  font-size: min(3.4rem, calc((min(100vw, 480px) - 72px) / (var(--slots) * 0.72)));
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  width: calc(var(--slots) * var(--slot));
+  height: calc((1 + var(--above) + var(--below)) * 1.1em);
+}
+
+.trick-token {
+  position: absolute;
+  left: 0;
+  top: calc(var(--above) * 1.1em);
+  width: var(--slot);
+  line-height: 1.1;
+  text-align: center;
+  transform: translate(calc(var(--x) * var(--slot)), calc(var(--y) * 1.1em)) scale(var(--s));
+  transition:
+    transform 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.4s ease,
+    color 0.2s ease;
+}
+
+.trick-token.sym {
+  color: var(--ink-3);
+  font-weight: 500;
+}
+
+.trick-token.lit {
+  color: var(--accent-text);
+}
+
+.trick-caption {
+  font-size: 1.12rem;
+  font-weight: 600;
+  min-height: 2.9em;
+  text-align: center;
+  text-wrap: balance;
 }

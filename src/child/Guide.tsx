@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { BarModel, exprText } from '../components/StrategyView';
+import { BarModel, ExprView, exprText, NoteView } from '../components/StrategyView';
 import { guideFor } from '../engine/guide';
 import { t } from '../i18n';
 import { NumberPad } from './NumberPad';
@@ -135,11 +135,15 @@ export function Guide({
           <div className="guide-step">
             <p className="guide-text">{t(`guide.${step.text}`, step.vars)}</p>
             {showBars && <BarModel bar={step.bar} />}
-            <p className="guide-expr num">
-              {exprText(step.expr)} ={' '}
+            <p className="guide-expr num" data-expr={exprText(step.expr)}>
+              <span key={idx}>
+                <ExprView expr={step.expr} />
+              </span>{' '}
+              ={' '}
               <span className={`guide-input${flash ? ' good' : ''}`}>{input || (flash ? step.answer : '?')}</span>
             </p>
-            {step.note && <p className="guide-note">{t(`guide.${step.note}`, step.vars)}</p>}
+            {/* A final-step trick would give the answer away, so it waits until the end. */}
+            {step.note && !isFinal && <p className="guide-note">{t(`guide.${step.note}`, step.vars)}</p>}
             {mustCopy && (
               <p className="guide-note" role="status">
                 {t('guide.wrong', { v: step.answer })}
@@ -151,7 +155,7 @@ export function Guide({
         {done && (
           <div className="guide-step">
             {showBars && <BarModel bar={last.bar} />}
-            {last.note && <p className="guide-note">{t(`guide.${last.note}`, last.vars)}</p>}
+            {last.note && <NoteView note={last.note} a={a} b={b} vars={last.vars} />}
           </div>
         )}
       </div>

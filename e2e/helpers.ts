@@ -19,7 +19,7 @@ export async function completeGuide(page: Page) {
   for (let i = 0; i < 8; i++) {
     const expr = page.locator('.guide-expr');
     if (!(await expr.isVisible())) break;
-    const text = (await expr.textContent()) ?? '';
+    const text = ((await expr.getAttribute('data-expr')) ?? '') + ' = ?';
     if (text.includes('?')) await tapNumber(page, solveExpr(text));
     await page.waitForTimeout(450);
   }

@@ -1,45 +1,36 @@
+import { useEffect, useRef } from 'react';
 import { guideFor, type Bar, type Expr } from '../engine/guide';
+import { trickFor } from '../engine/tricks';
 import { t } from '../i18n';
+import { TrickShow } from './TrickShow';
 
 /**
- * Bar model: one labelled block per group. Blocks in tone "b" are the part being added,
- * "removed" is taken away, "faded" is the half we don't need.
+ * Bar model: one labelled block per group. Tone "b" is the part being added, "removed" is
+ * taken away, "faded" is the part we don't need. When the bar changes between steps, new
+ * blocks pop in one after another and changed blocks recolour, so the step is *seen*.
  */
 export function BarModel({ bar, compact }: { bar: Bar; compact?: boolean }) {
-  const count = bar.segments.length;
-  const gap = 4;
-  const h = compact ? 30 : 40;
-  const w = 44;
-  const width = count * w + (count - 1) * gap;
+  const prevCount = useRef(0);
+  const firstNew = prevCount.current;
+  useEffect(() => {
+    prevCount.current = bar.segments.length;
+  });
   return (
-    <svg
-      className="bar-model"
-      viewBox={`0 0 ${width} ${h}`}
-      style={{ maxWidth: count * (compact ? 34 : 48) }}
+    <div
+      className={`bar-model${compact ? ' compact' : ''}`}
       role="img"
-      aria-label={`${count} groups of ${bar.size}`}
+      aria-label={`${bar.segments.length} groups of ${bar.size}`}
     >
-      {bar.segments.map((tone, i) => {
-        const x = i * (w + gap);
-        const removed = tone === 'removed';
-        return (
-          <g key={i} className={`seg seg-${tone}`}>
-            <rect
-              x={removed ? x + 1 : x}
-              y={removed ? 1 : 0}
-              width={removed ? w - 2 : w}
-              height={removed ? h - 2 : h}
-              rx={7}
-              strokeDasharray={removed ? '4 3' : undefined}
-            />
-            <text x={x + w / 2} y={h / 2 + 1} textAnchor="middle" dominantBaseline="middle">
-              {bar.size}
-            </text>
-            {removed && <line x1={x + 8} y1={h - 8} x2={x + w - 8} y2={8} />}
-          </g>
-        );
-      })}
-    </svg>
+      {bar.segments.map((tone, i) => (
+        <div
+          key={i}
+          className={`seg seg-${tone}${i >= firstNew ? ' enter' : ''}`}
+          style={{ '--d': `${Math.max(0, i - firstNew) * 70}ms` } as React.CSSProperties}
+        >
+          {bar.size}
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -54,6 +45,31 @@ export function exprText(e: Expr): string {
     case 'half':
       return `${t('guide.half')} ${e.x}`;
   }
+}
+
+/** An expression; a swapped factor visibly flips from the old number to the new one. */
+export function ExprView({ expr }: { expr: Expr }) {
+  if (expr.op !== 'times' || !expr.from) return <>{exprText(expr)}</>;
+  const swapped = (v: number) => (
+    <span className="swap">
+      <span className="swap-old" aria-hidden="true">
+        {expr.from!.value}
+      </span>
+      <span className="swap-new">{v}</span>
+    </span>
+  );
+  return (
+    <>
+      {expr.from.pos === 'x' ? swapped(expr.x) : expr.x} × {expr.from.pos === 'y' ? swapped(expr.y) : expr.y}
+    </>
+  );
+}
+
+/** A closing memory tip: an animated short when there is one, otherwise a line of text. */
+export function NoteView({ note, a, b, vars }: { note: string; a: number; b: number; vars: Record<string, number> }) {
+  const show = trickFor(note, a, b);
+  if (show) return <TrickShow show={show} />;
+  return <p className="guide-note">{t(`guide.${note}`, vars)}</p>;
 }
 
 /** The whole method at a glance, with every answer filled in (for the fact map and the parent view). */
@@ -73,7 +89,7 @@ export function GuideSteps({ a, b, showBar = true }: { a: number; b: number; sho
         ))}
       </ol>
       {showBar && <BarModel bar={last.bar} />}
-      {last.note && <p className="guide-note">{t(`guide.${last.note}`, last.vars)}</p>}
+      {last.note && <NoteView note={last.note} a={a} b={b} vars={last.vars} />}
     </div>
   );
 }

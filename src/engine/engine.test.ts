@@ -3,6 +3,7 @@ import { allFacts, factKey, groupOf, homeTable, teachingOrder } from './facts';
 import { DAY, deriveState, FLUENT_LEVEL, fluentCount } from './mastery';
 import { CheckupSession, PracticeSession, type Question } from './session';
 import { evaluate, factBar, guideFor } from './guide';
+import { trickFor, type TrickShow } from './tricks';
 import { dailyStats, practiceDaysLast7, troubleFacts } from './stats';
 import { withDefaults, type AnswerPayload, type LearnerSettings, type TutorEvent } from './types';
 
@@ -114,9 +115,9 @@ describe('guides', () => {
   });
 
   it('keeps numbers in their place when swapping a factor', () => {
-    expect(guideFor(5, 3).steps[0].expr).toEqual({ op: 'times', x: 10, y: 3 });
-    expect(guideFor(3, 5).steps[0].expr).toEqual({ op: 'times', x: 3, y: 10 });
-    expect(guideFor(7, 6).steps[0].expr).toEqual({ op: 'times', x: 7, y: 5 });
+    expect(guideFor(5, 3).steps[0].expr).toMatchObject({ op: 'times', x: 10, y: 3 });
+    expect(guideFor(3, 5).steps[0].expr).toMatchObject({ op: 'times', x: 3, y: 10 });
+    expect(guideFor(7, 6).steps[0].expr).toMatchObject({ op: 'times', x: 7, y: 5 });
   });
 
   it('every step is correct arithmetic and every guide ends on the fact itself', () => {
@@ -139,6 +140,56 @@ describe('guides', () => {
       const bar = factBar(f.a, f.b);
       expect(bar.size * bar.segments.length).toBe(f.a * f.b);
     }
+  });
+});
+
+
+/* ---------- animated tricks ---------- */
+
+/** Read the main row of a frame left to right, skipping hidden tokens. */
+function readRow(show: TrickShow, frameIndex: number): string {
+  const f = show.frames[frameIndex];
+  return show.tokens
+    .filter((tok) => !f.tokens[tok.id].hidden && (f.tokens[tok.id].y ?? 0) === 0)
+    .sort((p, q) => f.tokens[p.id].x - f.tokens[q.id].x)
+    .map((tok) => tok.text)
+    .join('');
+}
+
+describe('animated tricks', () => {
+  const withTricks: [number, number, string][] = [];
+  for (const f of allFacts(12)) {
+    for (const [a, b] of [[f.a, f.b], [f.b, f.a]]) {
+      const note = guideFor(a, b).steps.at(-1)!.note;
+      if (note && trickFor(note, a, b)) withTricks.push([a, b, note]);
+    }
+  }
+
+  it('exist for 7 × 8, ×10, ×11 and ×9 facts', () => {
+    const notes = new Set(withTricks.map(([, , n]) => n));
+    expect([...notes].sort()).toEqual(['elevenTrick', 'nineTrick', 'sevenEightTrick', 'tenTrick']);
+  });
+
+  it('end on the fact, in the order it was asked, and stay inside the frame', () => {
+    for (const [a, b] of withTricks) {
+      const show = trickFor(guideFor(a, b).steps.at(-1)!.note!, a, b)!;
+      expect(readRow(show, show.frames.length - 1)).toBe(`${a}×${b}=${a * b}`);
+      for (const f of show.frames) {
+        for (const tok of show.tokens) {
+          const s = f.tokens[tok.id];
+          expect(s, `${a}×${b} ${tok.id}`).toBeDefined();
+          expect(s.x).toBeGreaterThanOrEqual(0);
+          expect(s.x).toBeLessThan(show.slots);
+        }
+      }
+    }
+  });
+
+  it('keep the answer hidden at the start (except 7 × 8, which starts from the full fact)', () => {
+    expect(readRow(trickFor('tenTrick', 7, 10)!, 0)).toBe('7×10=');
+    expect(readRow(trickFor('tenTrick', 10, 12)!, 0)).toBe('10×12=');
+    expect(readRow(trickFor('elevenTrick', 4, 11)!, 0)).toBe('4×11=');
+    expect(readRow(trickFor('nineTrick', 9, 7)!, 0)).toBe('9×7=63');
   });
 });
 

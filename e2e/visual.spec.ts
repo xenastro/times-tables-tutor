@@ -61,7 +61,7 @@ test('younger learner sees pictures and a short check-up (dark mode)', async ({ 
     await page.waitForTimeout(300);
   }
   await expect(page.locator('.question')).toBeVisible();
-  await expect(page.locator('.question-area svg.bar-model')).toBeVisible();
+  await expect(page.locator('.question-area .bar-model')).toBeVisible();
   await page.screenshot({ path: `${SHOTS}/v05-young-question-with-picture-dark.png` });
 
   // Hint button opens the strategy without leaving the question.
@@ -89,14 +89,9 @@ test('standard learner light mode: hint button and map sheet', async ({ browser,
   await page.getByRole('button', { name: 'Back home' }).click();
   await page.screenshot({ path: `${SHOTS}/v06-standard-home.png` });
   await page.getByRole('button', { name: "Start today's practice" }).click();
-  for (let i = 0; i < 20; i++) {
-    if (await page.getByRole('button', { name: 'Show me a way' }).isVisible()) break;
-    if (await page.locator('.guide-expr').isVisible()) {
-      const text = (await page.locator('.guide-expr').textContent()) ?? '';
-      if (text.includes('?')) for (const d of String(solveExpr(text))) await page.locator('.numpad').getByRole('button', { name: d, exact: true }).click();
-    }
-    if (await page.getByRole('button', { name: 'Back to practice' }).isVisible()) await page.getByRole('button', { name: 'Back to practice' }).click();
-    await page.waitForTimeout(100);
+  for (let i = 0; i < 10 && !(await page.getByRole('button', { name: 'Show me a way' }).isVisible()); i++) {
+    await completeGuide(page);
+    await page.waitForTimeout(300);
   }
   await page.getByRole('button', { name: 'Show me a way' }).click();
   await expect(page.locator('.guide')).toBeVisible();
@@ -123,12 +118,55 @@ for (const [w, h] of [
         const pad = await page.locator('.numpad button').last().boundingBox();
         expect(pad && pad.y + pad.height <= h + 1).toBe(true);
         if (w === 360) await page.screenshot({ path: `${SHOTS}/g-${a}x${b}-step${step + 1}.png` });
-        const text = (await expr.textContent()) ?? '';
+        const text = ((await expr.getAttribute('data-expr')) ?? '') + ' = ?';
         for (const d of String(solveExpr(text))) await page.locator('.numpad').getByRole('button', { name: d, exact: true }).click();
         await page.waitForTimeout(450);
       }
       await expect(page.getByRole('button', { name: 'Back to practice' })).toBeVisible();
       if (w === 360) await page.screenshot({ path: `${SHOTS}/g-${a}x${b}-done.png` });
     }
+  });
+}
+
+/** Each animated trick plays only after the guide is done, ends on the fact, and can be replayed. */
+const TRICKS: [number, number, string][] = [
+  [7, 8, 'So 7 × 8 = 56'],
+  [8, 7, '…and 8 × 7 is the same!'],
+  [7, 10, 'So 7 × 10 = 70'],
+  [10, 12, 'So 10 × 12 = 120'],
+  [11, 4, 'So 11 × 4 = 44'],
+  [9, 7, 'So 9 × 7 = 63'],
+];
+
+for (const [a, b, ending] of TRICKS) {
+  test(`${a} × ${b} trick animation`, async ({ browser, baseURL }) => {
+    test.skip(!baseURL?.includes('5173'), 'the guide preview page only exists in the dev server');
+    const page = await (await browser.newContext({ viewport: { width: 360, height: 740 } })).newPage();
+    await page.goto(`/dev/guide?a=${a}&b=${b}`);
+    // The trick must not appear before the answer is worked out.
+    for (let step = 0; step < 6 && (await page.locator('.guide-expr').isVisible()); step++) {
+      await expect(page.locator('.trick')).toHaveCount(0);
+      await page.waitForTimeout(2000); // let the swap / bar animations play
+      if (step === 0) await page.screenshot({ path: `${SHOTS}/t-${a}x${b}-step1.png` });
+      const text = ((await page.locator('.guide-expr').getAttribute('data-expr')) ?? '') + ' = ?';
+      for (const d of String(solveExpr(text))) await page.locator('.numpad').getByRole('button', { name: d, exact: true }).click();
+      await page.waitForTimeout(450);
+    }
+    await expect(page.locator('.trick')).toBeVisible();
+    await page.locator('.trick').scrollIntoViewIfNeeded();
+    const start = Date.now();
+    for (const ms of [300, 1300, 2200, 3200, 4500]) {
+      await page.waitForTimeout(Math.max(0, ms - (Date.now() - start)));
+      await page.locator('.trick').screenshot({ path: `${SHOTS}/t-${a}x${b}-${String(ms).padStart(5, '0')}.png` });
+    }
+    await expect(page.locator('.trick-caption')).toHaveText(ending, { timeout: 15_000 });
+    await page.waitForTimeout(800);
+    await page.locator('.trick').screenshot({ path: `${SHOTS}/t-${a}x${b}-end.png` });
+    // The whole trick stays inside the screen.
+    const box = (await page.locator('.trick-row').boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(360);
+    await page.getByRole('button', { name: /Watch again/ }).click();
+    await expect(page.locator('.trick-caption')).not.toHaveText(ending);
   });
 }

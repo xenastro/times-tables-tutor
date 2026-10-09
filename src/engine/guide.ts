@@ -16,7 +16,7 @@ export interface Bar {
 }
 
 export type Expr =
-  | { op: 'times'; x: number; y: number }
+  | { op: 'times'; x: number; y: number; /** The factor that was swapped in (for the swap animation). */ from?: { pos: 'x' | 'y'; value: number } }
   | { op: 'plus'; x: number; y: number }
   | { op: 'minus'; x: number; y: number }
   | { op: 'half'; x: number };
@@ -75,7 +75,8 @@ export function guideFor(a: number, b: number): Guide {
   const n = otherFactor(a, b);
   const p = a * b;
   // Replace the home factor with `k`, keeping its position.
-  const swap = (k: number): Expr => (h === a ? { op: 'times', x: k, y: b } : { op: 'times', x: a, y: k });
+  const swap = (k: number): Expr =>
+    h === a ? { op: 'times', x: k, y: b, from: { pos: 'x', value: a } } : { op: 'times', x: a, y: k, from: { pos: 'y', value: b } };
   const plus = (x: number, y: number): Expr => ({ op: 'plus', x, y });
   const step = (text: string, vars: Record<string, number>, expr: Expr, b2: Bar, note?: string): GuideStep => ({
     text,
@@ -102,7 +103,7 @@ export function guideFor(a: number, b: number): Guide {
       break;
     case 10:
       kind = 'times10';
-      steps = [step('times10', { n: m }, { op: 'times', x: a, y: b }, bar(10, ['a', m]))];
+      steps = [step('times10', { n: m }, { op: 'times', x: a, y: b }, bar(10, ['a', m]), 'tenTrick')];
       break;
     case 2:
       kind = 'double';
@@ -135,7 +136,7 @@ export function guideFor(a: number, b: number): Guide {
       steps = [
         step('tenMinusOne_1', { n: m }, swap(10), bar(m, ['a', 10])),
         step('tenMinusOne_2', { n: m, ten }, { op: 'minus', x: ten, y: m }, bar(m, ['a', 9], ['removed', 1])),
-        final(bar(m, ['a', 9])),
+        final(bar(m, ['a', 9]), m <= 9 ? 'nineTrick' : undefined),
       ];
       break;
     }
@@ -160,7 +161,7 @@ export function guideFor(a: number, b: number): Guide {
       const ten = 10 * m;
       steps = [
         step('tenPlusTwo_1', { n: m }, swap(10), bar(m, ['a', 10])),
-        step('tenPlusTwo_2', { n: m }, plus(m, m), bar(m, ['b', 2])),
+        step('tenPlusTwo_2', { n: m }, plus(m, m), bar(m, ['faded', 10], ['b', 2])),
         step('tenPlusTwo_3', { ten, two: 2 * m }, plus(ten, 2 * m), bar(m, ['a', 10], ['b', 2])),
         final(bar(m, ['a', 10], ['b', 2])),
       ];
@@ -191,7 +192,7 @@ export function guideFor(a: number, b: number): Guide {
       const five = 5 * m;
       steps = [
         step('fivePlusTwo_1', { n: m }, swap(5), bar(m, ['a', 5])),
-        step('fivePlusTwo_2', { n: m }, plus(m, m), bar(m, ['b', 2])),
+        step('fivePlusTwo_2', { n: m }, plus(m, m), bar(m, ['faded', 5], ['b', 2])),
         step('fivePlusTwo_3', { five, two: 2 * m }, plus(five, 2 * m), bar(m, ['a', 5], ['b', 2])),
         final(bar(m, ['a', 5], ['b', 2])),
       ];
