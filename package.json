@@ -1,0 +1,40 @@
+{
+  "name": "times-tables-tutor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A phone-first app that helps children build calm, lasting fluency with the multiplication tables, with a parent dashboard for tracking progress.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:api": "wrangler dev --port 8787",
+    "db:migrate:local": "wrangler d1 migrations apply tutor-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply tutor-db --remote",
+    "build": "tsc -p tsconfig.json --noEmit && tsc -p worker/tsconfig.json --noEmit && vite build",
+    "test": "vitest run",
+    "icons": "node scripts/make-icons.mjs",
+    "deploy": "npm run build && wrangler deploy"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xenastro/times-tables-tutor.git"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "dexie": "^4.4.6",
+    "hono": "^4.13.13",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261009.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "fake-indexeddb": "^6.2.5",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vite-plugin-pwa": "^2.0.0",
+    "vitest": "^5.0.3",
+    "wrangler": "^4.149.0"
+  }
+}

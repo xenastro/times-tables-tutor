@@ -1,0 +1,103 @@
+export type EventType =
+  | 'answer'
+  | 'checkup_skip'
+  | 'checkup_credit'
+  | 'checkup_end'
+  | 'session_start'
+  | 'session_end'
+  | 'hint_shown'
+  | 'strategy_viewed'
+  | 'feeling'
+  | 'settings_changed';
+
+/** One immutable record in a learner's log. Everything else is derived from these. */
+export interface TutorEvent<P = unknown> {
+  id: string;
+  learnerId: string;
+  type: EventType;
+  /** Client time, epoch ms. */
+  ts: number;
+  payload: P;
+}
+
+export type AnswerMode = 'calibration' | 'checkup' | 'practice';
+
+export interface AnswerPayload {
+  a: number;
+  b: number;
+  /** null when the learner chose "Not sure yet". */
+  given: number | null;
+  correct: boolean;
+  latencyMs: number;
+  mode: AnswerMode;
+  /** True when a strategy card was on screen for this fact just before answering. */
+  hinted: boolean;
+  sessionId: string;
+}
+
+export interface CheckupKeysPayload {
+  keys: string[];
+  sessionId: string;
+}
+
+export type SessionKind = 'checkup' | 'practice';
+
+export interface SessionStartPayload {
+  sessionId: string;
+  kind: SessionKind;
+}
+
+export interface SessionEndPayload {
+  sessionId: string;
+  kind: SessionKind;
+  answered: number;
+  correct: number;
+  durationMs: number;
+}
+
+export type Feeling = 'calm' | 'ok' | 'hard';
+
+export interface FeelingPayload {
+  sessionId: string;
+  feeling: Feeling;
+}
+
+export interface HintPayload {
+  a: number;
+  b: number;
+  sessionId: string;
+}
+
+export type Range = 10 | 12 | 'auto';
+export type Profile = 'standard' | 'young';
+export type PictureHints = 'always' | 'mistakes' | 'off';
+
+export interface LearnerSettings {
+  range: Range;
+  profile: Profile;
+  /** Number of answers in a practice session. */
+  sessionLength: number;
+  pictureHints: PictureHints;
+  /** Added to the fluency threshold; positive = more forgiving. */
+  thresholdOffsetMs: number;
+}
+
+export const DEFAULT_SETTINGS: LearnerSettings = {
+  range: 'auto',
+  profile: 'standard',
+  sessionLength: 30,
+  pictureHints: 'mistakes',
+  thresholdOffsetMs: 0,
+};
+
+export const YOUNG_DEFAULTS: Partial<LearnerSettings> = {
+  profile: 'young',
+  sessionLength: 20,
+  pictureHints: 'always',
+  thresholdOffsetMs: 1500,
+};
+
+export function withDefaults(s: Partial<LearnerSettings> | null | undefined): LearnerSettings {
+  const base = s?.profile === 'young' ? { ...DEFAULT_SETTINGS, ...YOUNG_DEFAULTS } : DEFAULT_SETTINGS;
+  return { ...base, ...(s ?? {}) };
+}
