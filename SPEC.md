@@ -89,6 +89,11 @@ Younger profiles default to read-aloud on, pictures always shown, and only ×10,
 - **Half speed.** Every animation is designed at 1× and played at half speed. Motion is used only where it explains something.
 - **Answers are never given away early,** and a hinted or guided answer never counts as fluent.
 
+### 4.6a Missing numbers, read-aloud and games (1.1)
+- **Missing-number puzzles** (`? × 7 = 56`): a first step into division. Mixed in only for facts at level 3+, taken from the "known" fillers (never a due review), at most 4 a session. The first one ever is an introduction: type a known fact, then fill the same fact's gap; a short then turns it into 56 ÷ 7 = 8. A hint or slip opens a guide that counts on or back from 2, 5 or 10 groups, one typed step at a time. They are counted separately and **never change a fact's level**; there is no picture under the question, since it would let the answer be counted.
+- **Read-aloud** uses the phone's own voice (speechSynthesis): questions and guide steps, plus a 🔊 button. If the phone has no voice, it does nothing. While the question is read, the answer clock waits.
+- **Games** (after the check-up): *Find the pairs* (match six facts to their answers, all face up) and *Fill a row* (fill one row of the map; a miss comes back later, a second miss opens the guide; the finished row lights up +n at a time). No timers, no losing. Game answers don't change fact levels.
+
 ### 4.7 Motivation
 - The fact map is the main reward.
 - The streak is a **forgiving streak**, counted as "5 of the last 7 days" rather than consecutive days, so one missed day doesn't wipe it.
@@ -193,7 +198,7 @@ Younger profiles default to read-aloud on, pictures always shown, and only ×10,
 - parent dashboard
 - English text, built ready for translation
 
-**1.1:**
+**1.1 (built, §4.6a):**
 - missing-number questions (`__ × 7 = 56`) as a first step into division
 - read-aloud
 - one or two low-pressure game modes
