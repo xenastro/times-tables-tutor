@@ -105,6 +105,10 @@ function cleanSettings(v: unknown): Record<string, unknown> {
     out.pictureHints = s.pictureHints;
   if (typeof s.thresholdOffsetMs === 'number' && Math.abs(s.thresholdOffsetMs) <= 5000)
     out.thresholdOffsetMs = Math.round(s.thresholdOffsetMs);
+  if (typeof s.readAloud === 'boolean') out.readAloud = s.readAloud;
+  if (s.language === 'en' || s.language === 'ar') out.language = s.language;
+  if (s.numerals === 'western' || s.numerals === 'eastern') out.numerals = s.numerals;
+  if (typeof s.bilingual === 'boolean') out.bilingual = s.bilingual;
   return out;
 }
 

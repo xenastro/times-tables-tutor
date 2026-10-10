@@ -48,6 +48,7 @@ export const EVENT_TYPES: EventType[] = [
   'feeling',
   'settings_changed',
   'tip_shown',
+  'lesson_done',
 ];
 
 export const AVATARS = ['🦊', '🐼', '🦉', '🐙', '🐢', '🦄', '🐧', '🦁', '🚀', '🌙', '⚡', '🎧'];

@@ -3,6 +3,7 @@ import { BarModel, ExprView, exprText, NoteView, solvedText } from '../component
 import { guideFor, missingGuideFor, type Expr } from '../engine/guide';
 import { t } from '../i18n';
 import { NumberPad } from './NumberPad';
+import { SayAgain, spokenExpr, stopSpeaking, useReadAloud } from './ReadAloud';
 
 export type GuideMode = 'new' | 'hint' | 'mistake';
 
@@ -54,6 +55,17 @@ export function Guide({
   useEffect(() => {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: 'smooth' });
   }, [idx, mustCopy, done]);
+
+  // Read each step aloud (when read-aloud is on), and the "type this number" note after a slip.
+  const { say } = useReadAloud();
+  const stepSpeech = done ? '' : `${t(`guide.${step.text}`, step.vars)} ${spokenExpr(step.expr)}`;
+  useEffect(() => {
+    if (stepSpeech) say(stepSpeech);
+  }, [say, stepSpeech]);
+  useEffect(() => {
+    if (mustCopy) say(t('guide.wrong', { v: step.answer }));
+  }, [mustCopy, say, step.answer]);
+  useEffect(() => () => stopSpeaking(), []);
 
   const check = useCallback(
     (value: number) => {
@@ -116,7 +128,10 @@ export function Guide({
   return (
     <div className="guide">
       <div className="guide-head">
-        <p className="kicker">{t(missing && mode === 'new' ? 'guide.kickerMissing' : KICKER[mode])}</p>
+        <p className="kicker">
+          {t(missing && mode === 'new' ? 'guide.kickerMissing' : KICKER[mode])}
+          {stepSpeech && <SayAgain text={stepSpeech} className="icon-btn icon-btn-sm" />}
+        </p>
         <p className="guide-fact num" dir="ltr">
           {heading}
         </p>

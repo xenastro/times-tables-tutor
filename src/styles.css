@@ -1355,3 +1355,12 @@ table.simple th {
   line-height: 1.15;
   padding: 0 0.15em;
 }
+
+/* ---------------------------------------------------------------- read-aloud */
+.icon-btn-sm {
+  width: 36px;
+  height: 36px;
+  font-size: 1.05rem;
+  vertical-align: middle;
+  margin-inline-start: 6px;
+}

@@ -11,6 +11,7 @@ import { navigate } from '../router';
 import { Guide, type GuideMode } from './Guide';
 import { useLearner } from './LearnerContext';
 import { NumberPad } from './NumberPad';
+import { SayAgain, spokenQuestion, stopSpeaking, useReadAloud } from './ReadAloud';
 import { Summary } from './Summary';
 
 type Phase =
@@ -29,6 +30,7 @@ const HARD_KINDS = ['new', 'learning', 'retry', 'repeat'];
 
 export function Practice() {
   const { state, settings, addEvents, events } = useLearner();
+  const { say } = useReadAloud();
 
   // Snapshot what the learner knew at the start, for the summary.
   const [startState] = useState(state);
@@ -127,6 +129,19 @@ export function Practice() {
     if (phase.kind === 'ask' || (phase.kind === 'guide' && phase.mode === 'new')) askedAt.current = performance.now();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase.kind]);
+
+  // Read the question aloud. Listening takes time, so if nothing has been typed yet when the
+  // voice finishes, the clock starts from there.
+  const askedQ = phase.kind === 'ask' ? phase.q : null;
+  const inputRef = useRef(input);
+  inputRef.current = input;
+  useEffect(() => {
+    if (!askedQ) return;
+    say(spokenQuestion(askedQ), () => {
+      if (inputRef.current === '') askedAt.current = Math.max(askedAt.current, performance.now());
+    });
+    return () => stopSpeaking();
+  }, [askedQ, say]);
 
   const record = useCallback(
     (q: Question, given: number | null, hintUsed: boolean) => {
@@ -269,6 +284,7 @@ export function Practice() {
         >
           <div style={{ width: `${progress * 100}%` }} />
         </div>
+        {(phase.kind === 'ask' || phase.kind === 'feedback') && <SayAgain text={spokenQuestion(phase.q)} />}
       </div>
 
       {phase.kind === 'intro' && (

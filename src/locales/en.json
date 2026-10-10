@@ -171,6 +171,10 @@
     "picAlways": "Always",
     "picMistakes": "After a mistake",
     "picOff": "Off",
+    "readAloud": "Read aloud",
+    "readAloudNote": "Questions and steps are read out with the phone's own voice. If the phone has no voice installed, nothing is read and everything still works.",
+    "on": "On",
+    "off": "Off",
     "pace": "What counts as “fast”",
     "paceStrict": "A bit stricter",
     "paceNormal": "Normal",
@@ -270,6 +274,15 @@
       "done": "So {a} × {b} = {p}",
       "summary": "9 × {n} = {p}: {tens} is one less than {n}, and {tens} + {ones} = 9."
     }
+  },
+  "speech": {
+    "times": "{x} times {y}",
+    "plus": "{x} plus {y}",
+    "minus": "{x} take away {y}",
+    "half": "half of {x}",
+    "gapX": "What times {k} makes {p}?",
+    "gapY": "{k} times what makes {p}?",
+    "again": "Say it again"
   },
   "turnaround": {
     "rows": "{rows} rows of {each}",

@@ -7,6 +7,7 @@ import { Home } from './Home';
 import { LearnerProvider, useLearner } from './LearnerContext';
 import { MapScreen } from './MapScreen';
 import { Practice } from './Practice';
+import { ReadAloudProvider } from './ReadAloud';
 import { Welcome } from './Welcome';
 
 export function ChildApp({ path }: { path: string }) {
@@ -32,13 +33,21 @@ export function ChildApp({ path }: { path: string }) {
 }
 
 function Screens({ path }: { path: string }) {
-  const { learner, loaded } = useLearner();
+  const { learner, loaded, settings } = useLearner();
 
   useEffect(() => {
     document.documentElement.dataset.accent = learner.theme;
   }, [learner.theme]);
 
   if (!loaded) return <main className="screen"><p className="muted">{t('common.loading')}</p></main>;
+  return (
+    <ReadAloudProvider enabled={settings.readAloud} lang={settings.language}>
+      <Screen path={path} />
+    </ReadAloudProvider>
+  );
+}
+
+function Screen({ path }: { path: string }) {
   if (path === '/practice') return <Practice />;
   if (path === '/map') return <MapScreen />;
   if (path === '/me') return <Customize />;

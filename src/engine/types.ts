@@ -9,7 +9,8 @@ export type EventType =
   | 'strategy_viewed'
   | 'feeling'
   | 'settings_changed'
-  | 'tip_shown';
+  | 'tip_shown'
+  | 'lesson_done';
 
 /** One immutable record in a learner's log. Everything else is derived from these. */
 export interface TutorEvent<P = unknown> {
@@ -52,7 +53,7 @@ export interface CheckupKeysPayload {
   sessionId: string;
 }
 
-export type SessionKind = 'checkup' | 'practice';
+export type SessionKind = 'checkup' | 'practice' | 'game';
 
 export interface SessionStartPayload {
   sessionId: string;
@@ -92,7 +93,18 @@ export interface LearnerSettings {
   pictureHints: PictureHints;
   /** Added to the fluency threshold; positive = more forgiving. */
   thresholdOffsetMs: number;
+  /** Read questions and steps aloud with the phone's built-in voice. */
+  readAloud: boolean;
+  /** Language of the child's screens. */
+  language: Language;
+  /** 0123 or ٠١٢٣. */
+  numerals: Numerals;
+  /** Hear (and see) each question in Arabic words; answer in digits. */
+  bilingual: boolean;
 }
+
+export type Language = 'en' | 'ar';
+export type Numerals = 'western' | 'eastern';
 
 export const DEFAULT_SETTINGS: LearnerSettings = {
   range: 'auto',
@@ -100,6 +112,10 @@ export const DEFAULT_SETTINGS: LearnerSettings = {
   sessionLength: 30,
   pictureHints: 'mistakes',
   thresholdOffsetMs: 0,
+  readAloud: false,
+  language: 'en',
+  numerals: 'western',
+  bilingual: false,
 };
 
 export const YOUNG_DEFAULTS: Partial<LearnerSettings> = {
@@ -107,6 +123,7 @@ export const YOUNG_DEFAULTS: Partial<LearnerSettings> = {
   sessionLength: 20,
   pictureHints: 'always',
   thresholdOffsetMs: 1500,
+  readAloud: true,
 };
 
 export function withDefaults(s: Partial<LearnerSettings> | null | undefined): LearnerSettings {
