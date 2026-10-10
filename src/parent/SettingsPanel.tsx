@@ -112,6 +112,34 @@ export function SettingsPanel({ learner, onSaved }: { learner: LearnerDTO; onSav
         ]}
       />
       <Choice
+        label={t('parent.language')}
+        value={s.language}
+        onChange={(v) => set('language', v)}
+        options={[
+          { value: 'en', label: t('parent.langEn') },
+          { value: 'ar', label: t('parent.langAr') },
+        ]}
+      />
+      <Choice
+        label={t('parent.numerals')}
+        value={s.numerals}
+        onChange={(v) => set('numerals', v)}
+        options={[
+          { value: 'western', label: '0 1 2 3' },
+          { value: 'eastern', label: '٠ ١ ٢ ٣' },
+        ]}
+      />
+      <Choice
+        label={t('parent.bilingual')}
+        value={s.bilingual ? 'on' : 'off'}
+        onChange={(v) => set('bilingual', v === 'on')}
+        note={t('parent.bilingualNote')}
+        options={[
+          { value: 'on', label: t('parent.on') },
+          { value: 'off', label: t('parent.off') },
+        ]}
+      />
+      <Choice
         label={t('parent.pace')}
         value={s.thresholdOffsetMs}
         onChange={(v) => set('thresholdOffsetMs', v)}

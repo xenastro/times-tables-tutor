@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BarModel, ExprView, exprText, NoteView, solvedText } from '../components/StrategyView';
 import { guideFor, missingGuideFor, type Expr } from '../engine/guide';
-import { t } from '../i18n';
+import { currentLanguage, n, t, tIn } from '../i18n';
 import { NumberPad } from './NumberPad';
 import { SayAgain, spokenExpr, stopSpeaking, useReadAloud } from './ReadAloud';
 
@@ -58,7 +58,7 @@ export function Guide({
 
   // Read each step aloud (when read-aloud is on), and the "type this number" note after a slip.
   const { say } = useReadAloud();
-  const stepSpeech = done ? '' : `${t(`guide.${step.text}`, step.vars)} ${spokenExpr(step.expr)}`;
+  const stepSpeech = done ? '' : `${tIn(currentLanguage(), `guide.${step.text}`, step.vars)} ${spokenExpr(step.expr)}`;
   useEffect(() => {
     if (stepSpeech) say(stepSpeech);
   }, [say, stepSpeech]);
@@ -114,7 +114,7 @@ export function Guide({
     return () => window.removeEventListener('keydown', onKey);
   }, [done, onFinish, press, target]);
 
-  const box = <span className={`guide-input${flash ? ' good' : ''}`}>{input || (flash ? step.answer : '?')}</span>;
+  const box = <span className={`guide-input${flash ? ' good' : ''}`}>{input ? n(input) : flash ? n(step.answer) : '?'}</span>;
   // Until it's worked out, a missing-number question shows its gap, never the hidden number.
   // (In the introduction the first step asks for the product, so the puzzle waits until step 2.)
   const heading = missing
@@ -122,8 +122,8 @@ export function Guide({
       ? solvedText(last.expr, last.answer)
       : intro && idx === 0
         ? ''
-        : exprText(last.expr)
-    : `${a} × ${b}${done ? ` = ${a * b}` : ''}`;
+        : n(exprText(last.expr))
+    : n(`${a} × ${b}${done ? ` = ${a * b}` : ''}`);
 
   return (
     <div className="guide">
@@ -213,11 +213,11 @@ export function Guide({
 function GapExpr({ expr, box }: { expr: Extract<Expr, { op: 'gap' }>; box: React.ReactNode }) {
   return expr.pos === 'x' ? (
     <>
-      {box} × {expr.known} = {expr.p}
+      {box} × {n(expr.known)} = {n(expr.p)}
     </>
   ) : (
     <>
-      {expr.known} × {box} = {expr.p}
+      {n(expr.known)} × {box} = {n(expr.p)}
     </>
   );
 }

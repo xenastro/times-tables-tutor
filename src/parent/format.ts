@@ -1,4 +1,7 @@
-import { t } from '../i18n';
+import { currentLanguage, t } from '../i18n';
+
+/** Dates follow the parent's language, always with 0123 digits. */
+const locale = () => (currentLanguage() === 'ar' ? 'ar-u-nu-latn' : undefined);
 import { dayKey } from '../engine/stats';
 
 export function relativeDay(ts: number, now = Date.now()): string {
@@ -15,9 +18,9 @@ export function seconds(ms: number | null): string {
 }
 
 export function shortDate(ts: number): string {
-  return new Date(ts).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+  return new Date(ts).toLocaleDateString(locale(), { day: 'numeric', month: 'short' });
 }
 
 export function shortDateTime(ts: number): string {
-  return new Date(ts).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+  return new Date(ts).toLocaleString(locale(), { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
 }

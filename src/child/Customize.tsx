@@ -19,7 +19,7 @@ export function Customize() {
     <main className="screen">
       <header className="row">
         <button className="icon-btn" aria-label={t('common.back')} onClick={() => goBack('/')}>
-          ←
+          <span className="flip-rtl">←</span>
         </button>
         <h1 style={{ fontSize: '1.4rem' }}>{t('me.title')}</h1>
       </header>

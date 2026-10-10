@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { t } from '../i18n';
+import { n, t } from '../i18n';
 
 /**
  * "Turn it around": a rows of b blocks rotate a quarter turn into b rows of a.
@@ -53,7 +53,9 @@ export function TurnaroundShow({ a, b }: { a: number; b: number }) {
       <p className="turnaround-caption" aria-live="polite">
         {t(f.caption, { rows, each })}
       </p>
-      <p className="turnaround-eq num">{eq}</p>
+      <p className="turnaround-eq num" dir="ltr">
+        {n(eq)}
+      </p>
       <button
         className="btn btn-soft"
         style={{ visibility: frame === last ? 'visible' : 'hidden' }}
@@ -77,7 +79,7 @@ export function TurnaroundToggle({ a, b }: { a: number; b: number }) {
     <TurnaroundShow a={a} b={b} />
   ) : (
     <button className="btn btn-soft" onClick={() => setOpen(true)}>
-      ↻ {t('turnaround.button')}: {a} × {b} = {b} × {a}
+      ↻ {t('turnaround.button')}: <span dir="ltr">{n(`${a} × ${b} = ${b} × ${a}`)}</span>
     </button>
   );
 }

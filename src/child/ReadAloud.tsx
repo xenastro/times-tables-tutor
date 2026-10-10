@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, type ReactNode } from 'react';
 import type { Expr } from '../engine/guide';
-import { t } from '../i18n';
+import { currentLanguage, t, tIn } from '../i18n';
 import { speak, stopSpeaking, useCanSpeak, type SpeechLang } from '../speech';
 
 interface ReadAloudCtx {
@@ -34,15 +34,15 @@ export { stopSpeaking };
 export function spokenExpr(e: Expr): string {
   switch (e.op) {
     case 'times':
-      return t('speech.times', { x: e.x, y: e.y });
+      return tIn(currentLanguage(), 'speech.times', { x: e.x, y: e.y });
     case 'plus':
-      return t('speech.plus', { x: e.x, y: e.y });
+      return tIn(currentLanguage(), 'speech.plus', { x: e.x, y: e.y });
     case 'minus':
-      return t('speech.minus', { x: e.x, y: e.y });
+      return tIn(currentLanguage(), 'speech.minus', { x: e.x, y: e.y });
     case 'half':
-      return t('speech.half', { x: e.x });
+      return tIn(currentLanguage(), 'speech.half', { x: e.x });
     case 'gap':
-      return t(e.pos === 'x' ? 'speech.gapX' : 'speech.gapY', { k: e.known, p: e.p });
+      return tIn(currentLanguage(), e.pos === 'x' ? 'speech.gapX' : 'speech.gapY', { k: e.known, p: e.p });
   }
 }
 

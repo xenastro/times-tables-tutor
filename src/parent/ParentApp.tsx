@@ -1,13 +1,21 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, ApiError } from '../data/api';
-import { t } from '../i18n';
+import { saveParentLanguage, savedParentLanguage, setLocale, t } from '../i18n';
 import { navigate } from '../router';
 import { Auth } from './Auth';
 import { ChildDetail } from './ChildDetail';
 import { ChildrenList } from './ChildrenList';
+import { VoiceRecorder } from './VoiceRecorder';
 
 export function ParentApp({ path }: { path: string }) {
   const [email, setEmail] = useState<string | null | undefined>(undefined);
+  const [lang, setLang] = useState(savedParentLanguage);
+  setLocale(lang);
+  const switchLang = () => {
+    const next = lang === 'ar' ? 'en' : 'ar';
+    saveParentLanguage(next);
+    setLang(next);
+  };
 
   useEffect(() => {
     document.documentElement.dataset.accent = 'teal';
@@ -23,7 +31,7 @@ export function ParentApp({ path }: { path: string }) {
   }, []);
 
   if (email === undefined) return null;
-  if (email === null) return <Auth onSignedIn={setEmail} />;
+  if (email === null) return <Auth onSignedIn={setEmail} onSwitchLanguage={switchLang} />;
 
   const childMatch = path.match(/^\/parent\/child\/([\w-]+)/);
   return (
@@ -34,12 +42,18 @@ export function ParentApp({ path }: { path: string }) {
         <>
           <header className="parent-header">
             <h1>{t('parent.title')}</h1>
-            <button className="btn btn-ghost" onClick={signOut}>
-              {t('parent.signOut')}
-            </button>
+            <div className="row" style={{ gap: 4 }}>
+              <button className="btn btn-ghost" onClick={switchLang} lang={lang === 'ar' ? 'en' : 'ar'}>
+                {t('parent.langSwitch')}
+              </button>
+              <button className="btn btn-ghost" onClick={signOut}>
+                {t('parent.signOut')}
+              </button>
+            </div>
           </header>
           <p className="muted small">{email}</p>
           <ChildrenList />
+          <VoiceRecorder />
         </>
       )}
     </div>

@@ -97,14 +97,14 @@ export function ChildDetail({ id }: { id: string }) {
       <header className="parent-header">
         <div className="row">
           <button className="icon-btn" aria-label={t('common.back')} onClick={() => goBack('/parent')}>
-            ←
+            <span className="flip-rtl">←</span>
           </button>
           <span className="avatar" aria-hidden="true">
             {learner.avatar}
           </span>
           <h1>{learner.displayName}</h1>
         </div>
-        <button className="btn btn-ghost" onClick={() => void load()} aria-label="Refresh">
+        <button className="btn btn-ghost" onClick={() => void load()} aria-label={t('common.refresh')}>
           ↻
         </button>
       </header>
@@ -247,11 +247,11 @@ export function ChildDetail({ id }: { id: string }) {
           <table className="simple">
             <thead>
               <tr>
-                <th>When</th>
-                <th>Type</th>
-                <th>Answers</th>
-                <th>Right</th>
-                <th>Minutes</th>
+                <th>{t('parent.thWhen')}</th>
+                <th>{t('parent.thType')}</th>
+                <th>{t('parent.thAnswers')}</th>
+                <th>{t('parent.thRight')}</th>
+                <th>{t('parent.thMinutes')}</th>
               </tr>
             </thead>
             <tbody>

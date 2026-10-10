@@ -63,7 +63,7 @@ export function Devices({ learnerId }: { learnerId: string }) {
           {devices.map((d) => (
             <div key={d.id} className="row spread">
               <span className="stack" style={{ gap: 0 }}>
-                <span>{d.label ?? 'Phone'}</span>
+                <span>{d.label ?? t('parent.phone')}</span>
                 <span className="muted small">
                   {t('parent.pairedOn', { when: relativeDay(d.pairedAt) })}
                   {d.lastSeenAt ? ` · ${t('parent.seen', { when: relativeDay(d.lastSeenAt) })}` : ''}

@@ -86,7 +86,26 @@ check('incremental pull is empty', r.data.events.length === 0, r);
 r = await call('GET', '/api/device/me', null, { authorization: 'Bearer nope' });
 check('rejects bad device token', r.status === 401, r);
 
+// Parent-recorded audio: the parent uploads a clip, the child's phone can fetch it.
 cookie = parentCookie;
+const clipBytes = new Uint8Array([26, 69, 223, 163, 1, 2, 3, 4, 5]);
+let res = await fetch(BASE + '/api/audio/7', { method: 'PUT', headers: { cookie, 'content-type': 'audio/webm;codecs=opus' }, body: clipBytes });
+check('uploads a voice clip', res.status === 200, res.status);
+res = await fetch(BASE + '/api/audio/hello', { method: 'PUT', headers: { cookie, 'content-type': 'audio/webm' }, body: clipBytes });
+check('rejects an unknown clip', res.status === 400, res.status);
+res = await fetch(BASE + '/api/audio/8', { method: 'PUT', headers: { cookie, 'content-type': 'text/plain' }, body: clipBytes });
+check('rejects a non-audio clip', res.status === 400, res.status);
+res = await fetch(BASE + '/api/audio/8', { method: 'PUT', headers: { cookie, 'content-type': 'audio/webm' }, body: new Uint8Array(70 * 1024) });
+check('rejects a clip that is too big', res.status === 400, res.status);
+r = await call('GET', '/api/device/audio', null, auth);
+check('phone lists the parent clips', r.data.clips.length === 1 && r.data.clips[0].clip === '7', r);
+res = await fetch(BASE + '/api/device/audio/7', { headers: auth });
+const got = new Uint8Array(await res.arrayBuffer());
+check('phone downloads the clip unchanged', res.headers.get('content-type') === 'audio/webm' && got.join() === clipBytes.join(), [...got]);
+res = await fetch(BASE + '/api/audio/7', { method: 'DELETE', headers: { cookie } });
+r = await call('GET', '/api/audio');
+check('parent deletes a clip', r.data.clips.length === 0, r);
+
 r = await call('GET', '/api/learners');
 check('parent lists learners with activity', r.data.learners[0].deviceCount === 1 && r.data.learners[0].lastActivityAt > 0, r);
 r = await call('GET', `/api/learners/${learnerId}/events`);

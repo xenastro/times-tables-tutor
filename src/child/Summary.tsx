@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { FactMap, Legend } from '../components/FactMap';
 import { fluentCount, type LearnerState } from '../engine/mastery';
 import type { Feeling } from '../engine/types';
-import { t } from '../i18n';
+import { n, t } from '../i18n';
 import { navigate } from '../router';
 import { useLearner } from './LearnerContext';
 
@@ -53,11 +53,11 @@ export function Summary({
       {kind === 'practice' ? (
         <section className="stat-row">
           <div className="stat">
-            <div className="big-number">{answered}</div>
+            <div className="big-number">{n(answered)}</div>
             <div className="label">{t('summary.answered')}</div>
           </div>
           <div className="stat">
-            <div className="big-number">{movedUp.size}</div>
+            <div className="big-number">{n(movedUp.size)}</div>
             <div className="label">{t('summary.movedUp')}</div>
           </div>
         </section>
@@ -68,7 +68,9 @@ export function Summary({
       {newFacts.length > 0 && (
         <p className="muted">
           {t('summary.newFacts')}:{' '}
-          <strong className="num">{newFacts.map((k) => k.replace('x', ' × ')).join(', ')}</strong>
+          <strong className="num" dir="ltr">
+            {n(newFacts.map((k) => k.replace('x', ' × ')).join(', '))}
+          </strong>
         </p>
       )}
 

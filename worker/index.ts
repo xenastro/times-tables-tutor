@@ -1,6 +1,7 @@
 import { Hono, type Context, type Next } from 'hono';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
-import { AVATARS, EVENT_TYPES, THEMES, type DeviceDTO, type LearnerDTO, type LearnerSummaryDTO } from '../src/shared/api';
+import { ARABIC_CLIPS } from '../src/engine/arabic';
+import { AVATARS, EVENT_TYPES, THEMES, type AudioClipDTO, type DeviceDTO, type LearnerDTO, type LearnerSummaryDTO } from '../src/shared/api';
 import { hashPassword, randomDigits, randomToken, sha256, verifyPassword } from './crypto';
 
 interface Env {
@@ -335,6 +336,76 @@ app.get('/learners/:id/events', async (c) => {
   return eventsPage(c, row.id);
 });
 
+/* ---------------------------------------------------------------- parent-recorded audio */
+
+const MAX_CLIP_BYTES = 64 * 1024;
+
+function toBase64(buf: ArrayBuffer): string {
+  const bytes = new Uint8Array(buf);
+  let s = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+
+function fromBase64(b64: string): Uint8Array {
+  const s = atob(b64);
+  const out = new Uint8Array(s.length);
+  for (let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i);
+  return out;
+}
+
+async function listClips(c: Ctx, parentId: string) {
+  const { results } = await c.env.DB.prepare('SELECT clip, updated_at FROM audio_clips WHERE parent_id = ? ORDER BY clip')
+    .bind(parentId)
+    .all<{ clip: string; updated_at: number }>();
+  const clips: AudioClipDTO[] = results.map((r) => ({ clip: r.clip, updatedAt: r.updated_at }));
+  return c.json({ clips });
+}
+
+async function sendClip(c: Ctx, parentId: string) {
+  const row = await c.env.DB.prepare('SELECT mime, data_b64, updated_at FROM audio_clips WHERE parent_id = ? AND clip = ?')
+    .bind(parentId, c.req.param('clip'))
+    .first<{ mime: string; data_b64: string; updated_at: number }>();
+  if (!row) return bad(c, 'not_found', 404);
+  return new Response(fromBase64(row.data_b64), {
+    headers: { 'content-type': row.mime, 'cache-control': 'private, max-age=0', 'x-updated-at': String(row.updated_at) },
+  });
+}
+
+app.use('/audio', requireParent);
+app.use('/audio/*', requireParent);
+
+app.get('/audio', (c) => listClips(c, c.get('parentId')));
+app.get('/audio/:clip', (c) => sendClip(c, c.get('parentId')));
+
+app.put('/audio/:clip', async (c) => {
+  const clip = c.req.param('clip');
+  if (!ARABIC_CLIPS.includes(clip)) return bad(c, 'unknown_clip');
+  const mime = (c.req.header('content-type') ?? '').split(';')[0].trim();
+  if (!/^audio\/[\w.+-]+$/.test(mime)) return bad(c, 'not_audio');
+  const buf = await c.req.arrayBuffer();
+  if (!buf.byteLength || buf.byteLength > MAX_CLIP_BYTES) return bad(c, 'too_big');
+  const now = Date.now();
+  await c.env.DB.prepare(
+    `INSERT INTO audio_clips (parent_id, clip, mime, data_b64, updated_at) VALUES (?, ?, ?, ?, ?)
+     ON CONFLICT (parent_id, clip) DO UPDATE SET mime = excluded.mime, data_b64 = excluded.data_b64, updated_at = excluded.updated_at`,
+  )
+    .bind(c.get('parentId'), clip, mime, toBase64(buf), now)
+    .run();
+  return c.json({ clip, updatedAt: now });
+});
+
+app.delete('/audio/:clip', async (c) => {
+  await c.env.DB.prepare('DELETE FROM audio_clips WHERE parent_id = ? AND clip = ?').bind(c.get('parentId'), c.req.param('clip')).run();
+  return c.json({ ok: true });
+});
+
+/** The parent whose voice a child's phone plays. */
+async function parentOfLearner(c: Ctx): Promise<string | null> {
+  const row = await c.env.DB.prepare('SELECT parent_id FROM learners WHERE id = ?').bind(c.get('learnerId')).first<{ parent_id: string }>();
+  return row?.parent_id ?? null;
+}
+
 /* ---------------------------------------------------------------- devices (child phones) */
 
 app.post('/pair', async (c) => {
@@ -431,6 +502,15 @@ app.post('/device/events', async (c) => {
 });
 
 app.get('/device/events', (c) => eventsPage(c, c.get('learnerId')));
+
+app.get('/device/audio', async (c) => {
+  const parentId = await parentOfLearner(c);
+  return parentId ? listClips(c, parentId) : bad(c, 'not_paired', 401);
+});
+app.get('/device/audio/:clip', async (c) => {
+  const parentId = await parentOfLearner(c);
+  return parentId ? sendClip(c, parentId) : bad(c, 'not_paired', 401);
+});
 
 app.all('*', (c) => bad(c, 'not_found', 404));
 

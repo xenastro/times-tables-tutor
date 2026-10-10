@@ -4,7 +4,7 @@ import { FactMap } from '../components/FactMap';
 import { LESSONS, nextLesson } from '../engine/lessons';
 import { DAY, fluentCount, activeFacts } from '../engine/mastery';
 import { dayKey, practisedToday } from '../engine/stats';
-import { t } from '../i18n';
+import { n, t } from '../i18n';
 import { navigate } from '../router';
 import { useLearner } from './LearnerContext';
 
@@ -102,13 +102,13 @@ export function Home() {
         <section className="stat-row">
           <div className="stat">
             <div className="value">
-              {fluent} <small>/ {total}</small>
+              {n(fluent)} <small>/ {n(total)}</small>
             </div>
             <div className="label">{t('home.fluent')}</div>
           </div>
           <div className="stat">
             <div className="value">
-              {daysThisWeek} <small>/ 7</small>
+              {n(daysThisWeek)} <small>/ {n(7)}</small>
             </div>
             <div className="week-dots" aria-hidden="true">
               {week.map((on, i) => (

@@ -1692,3 +1692,133 @@ table.simple th {
 .lesson-path .chip:disabled {
   opacity: 0.5;
 }
+
+/* ---------------------------------------------------------------- right-to-left (Arabic) */
+[dir='rtl'] .flip-rtl {
+  display: inline-block;
+  transform: scaleX(-1);
+}
+
+/* Letter-spacing and capitals would break Arabic letters apart. */
+[dir='rtl'] .kicker,
+[dir='rtl'] .guide-head .kicker,
+[dir='rtl'] .panel .kicker {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Arabic number words, shown big in bilingual mode. */
+.question-words {
+  white-space: normal;
+  text-wrap: balance;
+  letter-spacing: 0;
+  font-size: clamp(2rem, 10vw, 3rem);
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+}
+
+/* ---------------------------------------------------------------- units-first number words */
+.words-show {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 0 4px;
+}
+
+.words-digits {
+  display: flex;
+  gap: 0.08em;
+  font-size: 4rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.words-digits span {
+  color: var(--ink-3);
+  transition: color 0.8s ease, transform 0.8s ease;
+}
+
+.words-digits span.said {
+  color: var(--ink);
+}
+
+.words-digits span.lit {
+  color: var(--accent-text);
+  transform: translateY(-0.08em) scale(1.12);
+}
+
+.words-row {
+  display: flex;
+  gap: 0.35em;
+  font-size: 1.9rem;
+  font-weight: 700;
+  min-height: 1.5em;
+  margin: 0;
+}
+
+.words-row span {
+  opacity: 0;
+  transform: translateY(0.4em);
+  transition: opacity 1s ease, transform 1s ease, color 0.6s ease;
+}
+
+.words-row span.in {
+  opacity: 1;
+  transform: none;
+}
+
+.words-row span.lit {
+  color: var(--accent-text);
+}
+
+.answer-words {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--good);
+  min-height: 1.4em;
+}
+
+/* ---------------------------------------------------------------- parent: voice recordings */
+.voice-summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 8px 0;
+}
+
+.voice-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.voice-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.voice-label {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 1.05rem;
+}
+
+.voice-label strong {
+  min-width: 2.2em;
+}
+
+.btn-small {
+  min-height: 38px;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  border-radius: 10px;
+}

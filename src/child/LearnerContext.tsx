@@ -5,6 +5,7 @@ import { withDefaults, type LearnerSettings, type TutorEvent } from '../engine/t
 import { api, ApiError, newId } from '../data/api';
 import { db, loadEvents, setDevice, type DeviceRecord, type StoredEvent } from '../data/db';
 import type { EventsPage, LearnerDTO } from '../shared/api';
+import { syncClips } from './arabicVoice';
 
 export type SyncStatus = 'synced' | 'syncing' | 'offline';
 
@@ -116,6 +117,11 @@ export function LearnerProvider({
         if (!page.more) break;
       }
       if (lastSeq !== deviceRef.current.lastSeq) await saveDevice({ ...deviceRef.current, lastSeq });
+
+      // 5. The parent's recorded Arabic number words, for bilingual mode.
+      if (withDefaults(deviceRef.current.learner.settings).bilingual) {
+        await syncClips(token).catch((e) => console.warn('voice clips not synced', e));
+      }
 
       setSyncStatus('synced');
     } catch (err) {

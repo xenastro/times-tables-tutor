@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BarModel } from '../components/StrategyView';
+import { NumberWordsShow } from '../components/NumberWordsShow';
 import { TurnaroundShow } from '../components/TurnaroundShow';
+import { arabicClips, arabicQuestion, arabicWords } from '../engine/arabic';
 import { factBar } from '../engine/guide';
 import { FLUENT_LEVEL } from '../engine/mastery';
 import { CheckupSession, expectedAnswer, PracticeSession, type Question } from '../engine/session';
 import { isProductAnswer, type AnswerPayload } from '../engine/types';
 import { newId } from '../data/api';
-import { t } from '../i18n';
+import { n, t } from '../i18n';
 import { navigate } from '../router';
+import { questionClips, stopArabic, useArabicVoice } from './arabicVoice';
 import { Guide, type GuideMode } from './Guide';
 import { useLearner } from './LearnerContext';
 import { NumberPad } from './NumberPad';
@@ -21,16 +24,21 @@ type Phase =
   | { kind: 'feedback'; q: Question; given: number | null; correct: boolean }
   | { kind: 'reveal'; q: Question }
   | { kind: 'turnaround'; q: Question }
+  /** Bilingual mode, first time: how Arabic says numbers (the ones first). */
+  | { kind: 'words'; q: Question }
   | { kind: 'break' }
   | { kind: 'summary' };
 
 const FEEDBACK_MS = 450;
+/** Long enough to read (and hear) the answer in Arabic words. */
+const BILINGUAL_FEEDBACK_MS = 2200;
 const MAX_DIGITS = 3;
 const HARD_KINDS = ['new', 'learning', 'retry', 'repeat'];
 
 export function Practice() {
   const { state, settings, addEvents, events } = useLearner();
   const { say } = useReadAloud();
+  const arabic = useArabicVoice();
 
   // Snapshot what the learner knew at the start, for the summary.
   const [startState] = useState(state);
@@ -72,6 +80,11 @@ export function Practice() {
     seenOrientations.has(`${q.b}x${q.a}`) &&
     !seenOrientations.has(`${q.a}x${q.b}`);
   const showBars = settings.pictureHints !== 'off';
+  // Bilingual mode: practice questions (not the check-up, not missing-number puzzles) come in Arabic words.
+  const isBilingual = (q: Question) => settings.bilingual && !isCheckup && q.form !== 'missing';
+  const unitsTipShown = useRef(
+    events.some((e) => e.type === 'tip_shown' && (e.payload as { tip?: string }).tip === 'unitsFirst'),
+  );
 
   const finish = useCallback(() => {
     if (ended.current) return;
@@ -135,17 +148,34 @@ export function Practice() {
   const askedQ = phase.kind === 'ask' ? phase.q : null;
   const inputRef = useRef(input);
   inputRef.current = input;
+  const sayQuestion = useCallback(
+    (q: Question, onEnd?: () => void) => {
+      if (isBilingual(q)) arabic.say(questionClips(q.a, q.b), arabicQuestion(q.a, q.b), onEnd);
+      else say(spokenQuestion(q), onEnd);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [arabic.say, say, settings.bilingual],
+  );
   useEffect(() => {
     if (!askedQ) return;
-    say(spokenQuestion(askedQ), () => {
+    sayQuestion(askedQ, () => {
       if (inputRef.current === '') askedAt.current = Math.max(askedAt.current, performance.now());
     });
-    return () => stopSpeaking();
-  }, [askedQ, say]);
+    return () => {
+      stopSpeaking();
+      stopArabic();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [askedQ]);
 
   const record = useCallback(
     (q: Question, given: number | null, hintUsed: boolean) => {
-      const res = session.record(q, { given, latencyMs: performance.now() - askedAt.current, hintUsed });
+      const res = session.record(q, {
+        given,
+        latencyMs: performance.now() - askedAt.current,
+        hintUsed,
+        bilingual: isBilingual(q),
+      });
       addEvents(res.events);
       if (q.form !== 'missing') seenOrientations.add(`${q.a}x${q.b}`);
       return res;
@@ -167,6 +197,20 @@ export function Practice() {
           addEvents([{ type: 'tip_shown', payload: { tip: 'turnaround', a: q.a, b: q.b, sessionId: session.sessionId } }]);
           setPhase({ kind: 'turnaround', q });
         }, FEEDBACK_MS);
+        return;
+      }
+      if (res.correct && isBilingual(q)) {
+        // Hear and see the answer in Arabic words. The first time, show how Arabic says numbers.
+        const p = q.a * q.b;
+        setPhase({ kind: 'feedback', q, given, correct: true });
+        arabic.say(arabicClips(p), arabicWords(p));
+        const tip = !unitsTipShown.current && p > 20 && p % 10 !== 0;
+        window.setTimeout(() => {
+          if (!tip) return advance();
+          unitsTipShown.current = true;
+          addEvents([{ type: 'tip_shown', payload: { tip: 'unitsFirst', a: q.a, b: q.b, sessionId: session.sessionId } }]);
+          setPhase({ kind: 'words', q });
+        }, BILINGUAL_FEEDBACK_MS);
         return;
       }
       if (isCheckup || res.correct) {
@@ -263,9 +307,9 @@ export function Practice() {
   const answerBox = (phase.kind === 'ask' || phase.kind === 'feedback') && (
     <span
       className={`answer-box num ${phase.kind === 'feedback' ? (isCheckup ? 'neutral' : 'good') : 'active'}`}
-      aria-label="Your answer"
+      aria-label={t('common.yourAnswer')}
     >
-      {phase.kind === 'feedback' ? (phase.given ?? '–') : input}
+      {phase.kind === 'feedback' ? (phase.given == null ? '–' : n(phase.given)) : n(input)}
     </span>
   );
 
@@ -334,9 +378,22 @@ export function Practice() {
         </div>
       )}
 
+      {phase.kind === 'words' && (
+        <div className="panel">
+          <p className="kicker">{t('bilingual.kicker')}</p>
+          <p className="muted">{t('bilingual.intro')}</p>
+          <NumberWordsShow n={phase.q.a * phase.q.b} say={arabic.say} />
+          <button className="btn btn-primary btn-big" onClick={advance}>
+            {t('common.gotIt')}
+          </button>
+        </div>
+      )}
+
       {phase.kind === 'reveal' && (
         <div className="panel">
-          <p className="fact num">{t('practice.reveal', { a: phase.q.a, b: phase.q.b, p: phase.q.a * phase.q.b })}</p>
+          <p className="fact num" dir="ltr">
+            {t('practice.reveal', { a: phase.q.a, b: phase.q.b, p: phase.q.a * phase.q.b })}
+          </p>
           <p className="muted">{t('practice.revealNote')}</p>
           <button className="btn btn-primary btn-big" onClick={advance} autoFocus>
             {t('common.gotIt')}
@@ -358,18 +415,40 @@ export function Practice() {
                 dir="ltr"
                 data-expr={phase.q.missing === 'a' ? `? × ${phase.q.b} = ${phase.q.a * phase.q.b}` : `${phase.q.a} × ? = ${phase.q.a * phase.q.b}`}
               >
-                {phase.q.missing === 'a' ? answerBox : phase.q.a}
+                {phase.q.missing === 'a' ? answerBox : n(phase.q.a)}
                 <span className="times">×</span>
-                {phase.q.missing === 'b' ? answerBox : phase.q.b}
+                {phase.q.missing === 'b' ? answerBox : n(phase.q.b)}
                 <span className="times">=</span>
-                {phase.q.a * phase.q.b}
+                {n(phase.q.a * phase.q.b)}
               </div>
+            ) : isBilingual(phase.q) ? (
+              // Bilingual: the question in Arabic words; the answer in digits.
+              <>
+                <div
+                  className="question question-words"
+                  dir="rtl"
+                  lang="ar"
+                  aria-live="polite"
+                  data-expr={`${phase.q.a} × ${phase.q.b}`}
+                >
+                  {arabicQuestion(phase.q.a, phase.q.b)}
+                </div>
+                {arabic.available && (
+                  <button className="btn btn-soft" onClick={() => sayQuestion(phase.q)}>
+                    🔊 {t('bilingual.listen')}
+                  </button>
+                )}
+                {answerBox}
+                <p className="answer-words" dir="rtl" lang="ar">
+                  {phase.kind === 'feedback' && phase.correct ? arabicWords(phase.q.a * phase.q.b) : ''}
+                </p>
+              </>
             ) : (
               <>
                 <div className="question num" aria-live="polite" dir="ltr" data-expr={`${phase.q.a} × ${phase.q.b}`}>
-                  {phase.q.a}
+                  {n(phase.q.a)}
                   <span className="times">×</span>
-                  {phase.q.b}
+                  {n(phase.q.b)}
                 </div>
                 {answerBox}
               </>

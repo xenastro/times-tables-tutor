@@ -11,7 +11,7 @@ export function solveExpr(text: string): number {
   if ((m = text.match(/(\d+)\s*×\s*(\d+)/))) return Number(m[1]) * Number(m[2]);
   if ((m = text.match(/(\d+)\s*\+\s*(\d+)/))) return Number(m[1]) + Number(m[2]);
   if ((m = text.match(/(\d+)\s*−\s*(\d+)/))) return Number(m[1]) - Number(m[2]);
-  if ((m = text.match(/half of (\d+)/))) return Number(m[1]) / 2;
+  if ((m = text.match(/(?:half of|نصف) (\d+)/))) return Number(m[1]) / 2;
   throw new Error('cannot solve ' + text);
 }
 

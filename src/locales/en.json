@@ -4,6 +4,11 @@
     "tagline": "A few calm minutes a day."
   },
   "common": {
+    "refresh": "Refresh",
+    "numberPad": "Number pad",
+    "delete": "Delete",
+    "check": "Check",
+    "yourAnswer": "Your answer",
     "back": "Back",
     "save": "Save",
     "saved": "Saved",
@@ -94,6 +99,12 @@
     "theme": "Pick a colour"
   },
   "parent": {
+    "thWhen": "When",
+    "thType": "Type",
+    "thAnswers": "Answers",
+    "thRight": "Right",
+    "thMinutes": "Minutes",
+    "phone": "Phone",
     "title": "Parent area",
     "signIn": "Sign in",
     "signUp": "Create account",
@@ -173,6 +184,23 @@
     "picAlways": "Always",
     "picMistakes": "After a mistake",
     "picOff": "Off",
+    "language": "Language",
+    "langEn": "English",
+    "langAr": "العربية",
+    "langSwitch": "العربية",
+    "numerals": "Numbers",
+    "bilingual": "Bilingual mode",
+    "bilingualNote": "Each practice question is shown and read in Arabic words (سبعة ضرب ثمانية), and your child answers in digits. It uses your recordings below when they're complete, otherwise the phone's Arabic voice if it has one; with neither, the words are still shown.",
+    "voiceTitle": "Your voice",
+    "voiceNote": "Record the Arabic number words in your own voice, one short clip each. Bilingual mode plays them instead of the phone's voice. The clips are stored with your account and shared only with your children's phones.",
+    "voiceRecord": "Record",
+    "voiceStop": "Stop",
+    "voicePlay": "Play",
+    "voiceDelete": "Delete",
+    "voiceProgress": "{n} of {total} recorded",
+    "voiceNoMic": "This browser can't record audio. Try Chrome on your phone.",
+    "voiceAnd": "and",
+    "voiceTimes": "times",
     "readAloud": "Read aloud",
     "readAloudNote": "Questions and steps are read out with the phone's own voice. If the phone has no voice installed, nothing is read and everything still works.",
     "on": "On",
@@ -196,6 +224,7 @@
     "level": "Level"
   },
   "guide": {
+    "barLabel": "{n} groups of {size}",
     "kickerNew": "New fact",
     "kickerHint": "Here's a way",
     "kickerMistake": "Let's work it out together",
@@ -324,6 +353,20 @@
     "rowDone": "You filled the ×{n} row!",
     "rowPattern": "Look: each answer is {n} more than the one before.",
     "rowAnother": "Fill another row"
+  },
+  "bilingual": {
+    "listen": "Listen",
+    "kicker": "Did you know?",
+    "intro": "Arabic says numbers in a special order."
+  },
+  "words": {
+    "intro": "In Arabic, we say the ones first.",
+    "place0": "{w}: the ones",
+    "place1": "{w}: the tens",
+    "place2": "{w}: the hundreds",
+    "whole": "{n} is “{w}”",
+    "summary": "{n} is said “{w}”: the ones first, then the tens.",
+    "button": "Say it in Arabic"
   },
   "speech": {
     "times": "{x} times {y}",

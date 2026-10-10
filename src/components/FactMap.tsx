@@ -1,6 +1,6 @@
 import { factKey } from '../engine/facts';
 import type { LearnerState } from '../engine/mastery';
-import { t } from '../i18n';
+import { n, t } from '../i18n';
 
 interface Props {
   state: LearnerState;
@@ -18,17 +18,17 @@ export function FactMap({ state, compact, highlight, onSelect, showProductsFrom 
   const cells = [];
   if (!compact) {
     cells.push(<div key="corner" className="hd" aria-hidden="true">×</div>);
-    for (let b = 1; b <= size; b++) cells.push(<div key={`h${b}`} className="hd">{b}</div>);
+    for (let b = 1; b <= size; b++) cells.push(<div key={`h${b}`} className="hd">{n(b)}</div>);
   }
   for (let a = 1; a <= size; a++) {
-    if (!compact) cells.push(<div key={`r${a}`} className="hd">{a}</div>);
+    if (!compact) cells.push(<div key={`r${a}`} className="hd">{n(a)}</div>);
     for (let b = 1; b <= size; b++) {
       const key = factKey(a, b);
       const f = state.facts[key];
       const locked = Math.max(a, b) > state.activeMax;
       const cls = `cell l${f.level}${locked ? ' locked' : ''}${highlight?.has(key) ? ' pop' : ''}`;
       const label = `${a} × ${b}: ${t(`map.factLevel${f.level}`)}`;
-      const content = !compact && f.level >= showProductsFrom ? a * b : '';
+      const content = !compact && f.level >= showProductsFrom ? n(a * b) : '';
       cells.push(
         onSelect ? (
           <button key={`${a}-${b}`} className={cls} aria-label={label} onClick={() => onSelect(a, b)}>

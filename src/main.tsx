@@ -4,7 +4,9 @@ import { ChildApp } from './child/ChildApp';
 import { Guide, type GuideMode } from './child/Guide';
 import { Lesson } from './child/Lesson';
 import type { LessonId } from './engine/lessons';
+import { NumberWordsShow } from './components/NumberWordsShow';
 import { TurnaroundShow } from './components/TurnaroundShow';
+import { setLocale } from './i18n';
 import { ParentApp } from './parent/ParentApp';
 import { useRoute } from './router';
 import './styles.css';
@@ -46,8 +48,20 @@ function LessonPreview() {
   return done ? <main className="screen"><h1>Lesson done</h1></main> : <Lesson id={id} onExit={() => undefined} onDone={() => setDone(true)} />;
 }
 
+/** Development-only preview of the units-first number words: /dev/words?n=56&lang=ar&digits=eastern */
+function WordsPreview() {
+  const q = new URLSearchParams(window.location.search);
+  setLocale(q.get('lang') === 'ar' ? 'ar' : 'en', q.get('digits') === 'eastern' ? 'eastern' : 'western');
+  return (
+    <main className="screen">
+      <NumberWordsShow n={Number(q.get('n') ?? 56)} />
+    </main>
+  );
+}
+
 function App() {
   const path = useRoute();
+  if (import.meta.env.DEV && path === '/dev/words') return <WordsPreview />;
   if (import.meta.env.DEV && path === '/dev/guide') return <GuidePreview />;
   if (import.meta.env.DEV && path === '/dev/turnaround') return <TurnaroundPreview />;
   if (import.meta.env.DEV && path === '/dev/lesson') return <LessonPreview />;

@@ -97,7 +97,7 @@ export function Pairs() {
             goBack('/');
           }}
         >
-          ←
+          <span className="flip-rtl">←</span>
         </button>
         <h1 style={{ fontSize: '1.4rem' }}>{t('games.pairsTitle')}</h1>
       </header>

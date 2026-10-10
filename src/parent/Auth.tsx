@@ -3,7 +3,7 @@ import { api, ApiError } from '../data/api';
 import { t } from '../i18n';
 import { navigate } from '../router';
 
-export function Auth({ onSignedIn }: { onSignedIn: (email: string) => void }) {
+export function Auth({ onSignedIn, onSwitchLanguage }: { onSignedIn: (email: string) => void; onSwitchLanguage: () => void }) {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -73,9 +73,14 @@ export function Auth({ onSignedIn }: { onSignedIn: (email: string) => void }) {
           {mode === 'signin' ? t('parent.signIn') : t('parent.signUp')}
         </button>
       </form>
-      <button className="link" style={{ alignSelf: 'center' }} onClick={() => navigate('/')}>
-        ← {t('app.name')}
-      </button>
+      <div className="row" style={{ justifyContent: 'center', gap: 16 }}>
+        <button className="link" onClick={() => navigate('/')}>
+          {t('app.name')}
+        </button>
+        <button className="link" onClick={onSwitchLanguage}>
+          {t('parent.langSwitch')}
+        </button>
+      </div>
     </main>
   );
 }

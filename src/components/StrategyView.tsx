@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { guideFor, type Bar, type Expr } from '../engine/guide';
 import { trickFor } from '../engine/tricks';
-import { t } from '../i18n';
+import { n, t } from '../i18n';
 import { TrickShow } from './TrickShow';
 
 /**
@@ -19,7 +19,7 @@ export function BarModel({ bar, compact }: { bar: Bar; compact?: boolean }) {
     <div
       className={`bar-model${compact ? ' compact' : ''}`}
       role="img"
-      aria-label={`${bar.segments.length} groups of ${bar.size}`}
+      aria-label={t('guide.barLabel', { n: bar.segments.length, size: bar.size })}
     >
       {bar.segments.map((tone, i) => (
         <div
@@ -27,7 +27,7 @@ export function BarModel({ bar, compact }: { bar: Bar; compact?: boolean }) {
           className={`seg seg-${tone}${i >= firstNew ? ' enter' : ''}`}
           style={{ '--d': `${Math.max(0, i - firstNew) * 140}ms` } as React.CSSProperties}
         >
-          {bar.size}
+          {n(bar.size)}
         </div>
       ))}
     </div>
@@ -49,26 +49,26 @@ export function exprText(e: Expr): string {
   }
 }
 
-/** A finished step as a sum: "10 × 3 = 30", or the filled gap "8 × 7 = 56". */
+/** A finished step as a sum, ready to display: "10 × 3 = 30", or the filled gap "8 × 7 = 56". */
 export function solvedText(e: Expr, answer: number): string {
-  if (e.op === 'gap') return e.pos === 'x' ? `${answer} × ${e.known} = ${e.p}` : `${e.known} × ${answer} = ${e.p}`;
-  return `${exprText(e)} = ${answer}`;
+  if (e.op === 'gap') return n(e.pos === 'x' ? `${answer} × ${e.known} = ${e.p}` : `${e.known} × ${answer} = ${e.p}`);
+  return n(`${exprText(e)} = ${answer}`);
 }
 
 /** An expression; a swapped factor visibly flips from the old number to the new one. */
 export function ExprView({ expr }: { expr: Expr }) {
-  if (expr.op !== 'times' || !expr.from) return <>{exprText(expr)}</>;
+  if (expr.op !== 'times' || !expr.from) return <>{n(exprText(expr))}</>;
   const swapped = (v: number) => (
     <span className="swap">
       <span className="swap-old" aria-hidden="true">
-        {expr.from!.value}
+        {n(expr.from!.value)}
       </span>
-      <span className="swap-new">{v}</span>
+      <span className="swap-new">{n(v)}</span>
     </span>
   );
   return (
     <>
-      {expr.from.pos === 'x' ? swapped(expr.x) : expr.x} × {expr.from.pos === 'y' ? swapped(expr.y) : expr.y}
+      {expr.from.pos === 'x' ? swapped(expr.x) : n(expr.x)} × {expr.from.pos === 'y' ? swapped(expr.y) : n(expr.y)}
     </>
   );
 }

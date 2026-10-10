@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { LessonPicture } from '../components/LessonPicture';
 import { ExprView, exprText } from '../components/StrategyView';
 import { lessonFor, type LessonId } from '../engine/lessons';
-import { n, t } from '../i18n';
+import { currentLanguage, n, t, tIn } from '../i18n';
 import { NumberPad } from './NumberPad';
 import { SayAgain, spokenExpr, stopSpeaking, useReadAloud } from './ReadAloud';
 
@@ -20,7 +20,7 @@ export function Lesson({ id, onExit, onDone }: { id: LessonId; onExit: () => voi
   const step = lesson.steps[idx];
   const { say } = useReadAloud();
 
-  const speech = `${t(`lesson.${step.text}`, step.vars)} ${step.expr ? spokenExpr(step.expr) : ''}`;
+  const speech = `${tIn(currentLanguage(), `lesson.${step.text}`, step.vars)} ${step.expr ? spokenExpr(step.expr) : ''}`;
   useEffect(() => {
     say(speech);
   }, [say, speech]);

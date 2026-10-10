@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { arabicParts, arabicQuestion, arabicWords, toEasternDigits, toWesternDigits } from './arabic';
+import { ARABIC_CLIPS, arabicClips, arabicParts, arabicQuestion, arabicWords, clipWord, toEasternDigits, toWesternDigits } from './arabic';
 
 describe('Arabic numbers', () => {
   it('converts digits both ways', () => {
@@ -45,6 +45,22 @@ describe('Arabic numbers', () => {
         .map((d, i) => (d === '0' ? -1 : i))
         .filter((i) => i >= 0);
       for (const i of nonZero) expect(named.has(i), `${n} digit ${i}`).toBe(true);
+    }
+  });
+
+  it('says every answer up to 144 with 30 recorded clips', () => {
+    expect(ARABIC_CLIPS).toHaveLength(30);
+    expect(arabicClips(56)).toEqual(['6', 'and', '50']);
+    expect(arabicClips(15)).toEqual(['15']);
+    expect(arabicClips(40)).toEqual(['40']);
+    expect(arabicClips(144)).toEqual(['100', 'and', '4', 'and', '40']);
+    expect(arabicClips(110)).toEqual(['100', 'and', '10']);
+    for (let n = 1; n <= 144; n++) {
+      const clips = arabicClips(n);
+      for (const c of clips) expect(ARABIC_CLIPS).toContain(c);
+      // The clips spell out exactly the written words.
+      const spoken = clips.map(clipWord).join(' ').replace(/و /g, 'و');
+      expect(spoken, String(n)).toBe(arabicWords(n));
     }
   });
 

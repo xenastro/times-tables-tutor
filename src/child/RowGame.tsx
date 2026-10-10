@@ -21,7 +21,7 @@ function RowPicker({ onPick }: { onPick: (table: number) => void }) {
     <main className="screen">
       <header className="row">
         <button className="icon-btn" aria-label={t('common.back')} onClick={() => goBack('/')}>
-          ←
+          <span className="flip-rtl">←</span>
         </button>
         <h1 style={{ fontSize: '1.4rem' }}>{t('games.rowTitle')}</h1>
       </header>
@@ -196,7 +196,7 @@ function RowPlay({ table, onAnother }: { table: number; onAnother: () => void })
             goBack('/');
           }}
         >
-          ←
+          <span className="flip-rtl">←</span>
         </button>
         <h1 className="grow" style={{ fontSize: '1.2rem' }}>
           {t('games.rowPlaying', { n: table })}
@@ -231,7 +231,7 @@ function RowPlay({ table, onAnother }: { table: number; onAnother: () => void })
               </div>
               <span
                 className={`answer-box num ${phase.kind === 'feedback' ? (phase.good ? 'good' : 'neutral') : 'active'}`}
-                aria-label="Your answer"
+                aria-label={t('common.yourAnswer')}
               >
                 {phase.kind === 'feedback' ? n(phase.given) : n(input)}
               </span>

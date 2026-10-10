@@ -42,6 +42,8 @@ export interface AnswerPayload {
   form?: QuestionForm;
   /** Which factor was hidden, for a missing-number question. */
   missing?: 'a' | 'b';
+  /** Asked in Arabic words (bilingual mode): understanding the words takes a little longer. */
+  bilingual?: boolean;
 }
 
 export function isProductAnswer(p: AnswerPayload): boolean {

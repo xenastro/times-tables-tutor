@@ -1,6 +1,7 @@
 import { factKey, groupOf, homeTable, teachingOrder, RULE_TABLES, parseKey } from './facts';
 import {
   activeFacts,
+  BILINGUAL_EXTRA_MS,
   FLUENT_LEVEL,
   median,
   ruleTableKeys,
@@ -47,6 +48,8 @@ export interface AnswerInput {
   given: number | null;
   latencyMs: number;
   hintUsed: boolean;
+  /** The question was shown/read in Arabic words. */
+  bilingual?: boolean;
 }
 
 export interface PendingEvent {
@@ -85,6 +88,7 @@ function answerEvent(q: Question, input: AnswerInput, correct: boolean, sessionI
       hinted: q.showStrategyFirst || input.hintUsed,
       sessionId,
       ...(q.form === 'missing' ? { form: 'missing', missing: q.missing } : {}),
+      ...(input.bilingual ? { bilingual: true } : {}),
     },
   };
 }
@@ -423,7 +427,8 @@ export class PracticeSession {
   record(q: Question, input: AnswerInput): RecordResult {
     const correct = input.given === expectedAnswer(q);
     const isMissing = q.form === 'missing';
-    const fluent = correct && !input.hintUsed && !q.showStrategyFirst && input.latencyMs <= this.thresholdMs;
+    const limit = this.thresholdMs + (input.bilingual ? BILINGUAL_EXTRA_MS : 0);
+    const fluent = correct && !input.hintUsed && !q.showStrategyFirst && input.latencyMs <= limit;
     this.answered++;
     if (correct) this.correctCount++;
     this.lastCorrect = correct;

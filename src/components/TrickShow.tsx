@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { TrickShow as Show } from '../engine/tricks';
-import { t } from '../i18n';
+import { n, t } from '../i18n';
 
 /** Frame timings are designed at 1×; children follow better at half speed. Keep in step with the CSS transitions. */
 export const PLAYBACK_SLOWDOWN = 2;
@@ -24,6 +24,7 @@ export function TrickShow({ show }: { show: Show }) {
       <div
         className="trick-row"
         aria-hidden="true"
+        dir="ltr"
         style={
           {
             '--slots': show.slots,
@@ -47,7 +48,7 @@ export function TrickShow({ show }: { show: Show }) {
                 } as React.CSSProperties
               }
             >
-              {tok.text}
+              {n(tok.text)}
             </span>
           );
         })}

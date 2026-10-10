@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getDevice, type DeviceRecord } from '../data/db';
-import { t } from '../i18n';
+import { savedParentLanguage, setLocale, t } from '../i18n';
 import { navigate } from '../router';
 import { Customize } from './Customize';
 import { Home } from './Home';
@@ -26,6 +26,8 @@ export function ChildApp({ path }: { path: string }) {
   }, []);
 
   if (device === undefined) return null;
+  // Before a phone is linked, use the language the parent area last used on this device.
+  if (device === null) setLocale(savedParentLanguage());
   if (device === null) return <Welcome onPaired={(d) => { setDevice(d); navigate('/', { replace: true }); }} />;
 
   return (
@@ -37,6 +39,8 @@ export function ChildApp({ path }: { path: string }) {
 
 function Screens({ path }: { path: string }) {
   const { learner, loaded, settings } = useLearner();
+  // The child's language and digits apply to everything rendered below.
+  setLocale(settings.language, settings.numerals);
 
   useEffect(() => {
     document.documentElement.dataset.accent = learner.theme;

@@ -46,6 +46,8 @@ export interface LearnerState {
 }
 
 const DEFAULT_THRESHOLD_MS = 4000;
+/** Extra time allowed when the question was given in Arabic words (bilingual mode). */
+export const BILINGUAL_EXTRA_MS = 2500;
 const BASELINE_MARGIN_MS = 2500;
 
 export function thresholdFor(baselineMs: number | null, offsetMs: number): number {
@@ -164,7 +166,7 @@ export function deriveState(events: TutorEvent[], settings: LearnerSettings): Le
       threshold = thresholdFor(baselineMs, settings.thresholdOffsetMs);
     }
 
-    const fluent = p.correct && !p.hinted && p.latencyMs <= threshold;
+    const fluent = p.correct && !p.hinted && p.latencyMs <= threshold + (p.bilingual ? BILINGUAL_EXTRA_MS : 0);
 
     if (p.mode === 'calibration' || p.mode === 'checkup') {
       checkupStarted = true;
