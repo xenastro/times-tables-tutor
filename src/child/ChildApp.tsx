@@ -6,6 +6,7 @@ import { Customize } from './Customize';
 import { Home } from './Home';
 import { LearnerProvider, useLearner } from './LearnerContext';
 import { MapScreen } from './MapScreen';
+import { LessonScreen } from './LessonScreen';
 import { Pairs } from './Pairs';
 import { Practice } from './Practice';
 import { RowGameScreen } from './RowGame';
@@ -55,5 +56,6 @@ function Screen({ path }: { path: string }) {
   if (path === '/me') return <Customize />;
   if (path === '/games/pairs') return <Pairs />;
   if (path === '/games/row') return <RowGameScreen />;
+  if (path.startsWith('/lesson/')) return <LessonScreen key={path} id={path.slice('/lesson/'.length)} />;
   return <Home />;
 }

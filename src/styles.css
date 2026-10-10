@@ -1540,3 +1540,155 @@ table.simple th {
 .question-row {
   font-size: clamp(2.6rem, 14vw, 4rem);
 }
+
+/* ---------------------------------------------------------------- Understand lessons */
+.lesson-step {
+  align-items: center;
+}
+
+.lesson-step .guide-text {
+  align-self: stretch;
+}
+
+.lesson-count {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+/* Equal groups: plates with the same number on each. */
+.lp-groups {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.lp-plate {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 3px solid var(--line);
+  display: grid;
+  grid-template-columns: repeat(var(--cols), auto);
+  place-content: center;
+  gap: 0 2px;
+  font-size: 1.2rem;
+  line-height: 1.15;
+}
+
+.lp-plate.enter {
+  animation: seg-in 1.4s cubic-bezier(0.3, 1.4, 0.5, 1) var(--d) both;
+}
+
+/* Arrays: rows of squares; the new row slides in square by square. */
+.lp-array-stage {
+  min-height: 140px;
+  display: grid;
+  place-items: center;
+}
+
+.lp-array {
+  display: grid;
+  gap: 5px;
+  transition: transform 2.4s cubic-bezier(0.45, 0, 0.25, 1);
+}
+
+.lp-array.turned {
+  transform: rotate(90deg);
+}
+
+.lp-array span {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  background: var(--accent);
+}
+
+.lp-array span.enter {
+  animation: seg-in 1.2s cubic-bezier(0.3, 1.4, 0.5, 1) var(--d) both;
+}
+
+/* Number line: the new jump draws itself, then its landing point appears. */
+.lp-line {
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+  overflow: visible;
+}
+
+.lp-axis,
+.lp-tick {
+  stroke: var(--ink-3);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.lp-label {
+  fill: var(--ink);
+  font-size: 15px;
+  font-weight: 700;
+  text-anchor: middle;
+  font-family: var(--font);
+}
+
+.lp-label.unknown {
+  fill: var(--accent-text);
+}
+
+.lp-hop {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.lp-hop.new {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw-hop 1.8s ease 0.3s forwards;
+}
+
+.lp-hop-label {
+  fill: var(--accent-text);
+  font-size: 13px;
+  font-weight: 700;
+  text-anchor: middle;
+  font-family: var(--font);
+}
+
+.lp-dot {
+  fill: var(--accent);
+}
+
+.lp-dot.new,
+.lp-label.unknown {
+  animation: fade-in 0.6s ease 2s both;
+}
+
+@keyframes draw-hop {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.lesson-path {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lesson-path .chip.done {
+  background: var(--good-soft);
+  color: var(--good);
+  border-color: transparent;
+  font-weight: 600;
+}
+
+.lesson-path .chip:disabled {
+  opacity: 0.5;
+}

@@ -1,7 +1,9 @@
-import { StrictMode } from 'react';
+import { StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ChildApp } from './child/ChildApp';
 import { Guide, type GuideMode } from './child/Guide';
+import { Lesson } from './child/Lesson';
+import type { LessonId } from './engine/lessons';
 import { TurnaroundShow } from './components/TurnaroundShow';
 import { ParentApp } from './parent/ParentApp';
 import { useRoute } from './router';
@@ -37,10 +39,18 @@ function TurnaroundPreview() {
   );
 }
 
+/** Development-only preview of an "Understand" lesson: /dev/lesson?id=groups */
+function LessonPreview() {
+  const id = (new URLSearchParams(window.location.search).get('id') ?? 'groups') as LessonId;
+  const [done, setDone] = useState(false);
+  return done ? <main className="screen"><h1>Lesson done</h1></main> : <Lesson id={id} onExit={() => undefined} onDone={() => setDone(true)} />;
+}
+
 function App() {
   const path = useRoute();
   if (import.meta.env.DEV && path === '/dev/guide') return <GuidePreview />;
   if (import.meta.env.DEV && path === '/dev/turnaround') return <TurnaroundPreview />;
+  if (import.meta.env.DEV && path === '/dev/lesson') return <LessonPreview />;
   return path.startsWith('/parent') ? <ParentApp path={path} /> : <ChildApp path={path} />;
 }
 

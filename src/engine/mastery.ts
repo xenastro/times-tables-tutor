@@ -41,6 +41,8 @@ export interface LearnerState {
   checkup: { done: boolean; started: boolean; remaining: string[] };
   /** Totals for missing-number questions; `attempts > 0` means the intro has been seen. */
   missing: { attempts: number; correct: number };
+  /** "Understand" lessons finished (younger learners). */
+  lessonsDone: string[];
 }
 
 const DEFAULT_THRESHOLD_MS = 4000;
@@ -110,10 +112,12 @@ export function deriveState(events: TutorEvent[], settings: LearnerSettings): Le
   let checkupStarted = false;
   let checkupEnded = false;
   const missing = { attempts: 0, correct: 0 };
+  const lessonsDone = new Set<string>();
 
   for (const e of sorted) {
     if (e.type === 'session_start' && (e.payload as { kind?: string }).kind === 'checkup') checkupStarted = true;
     if (e.type === 'checkup_end') checkupEnded = true;
+    if (e.type === 'lesson_done') lessonsDone.add((e.payload as { lesson: string }).lesson);
 
     if (e.type === 'checkup_skip' || e.type === 'checkup_credit') {
       const p = e.payload as CheckupKeysPayload;
@@ -197,6 +201,7 @@ export function deriveState(events: TutorEvent[], settings: LearnerSettings): Le
     activeMax,
     checkup: { started: checkupStarted, done: checkupEnded || remaining.length === 0, remaining },
     missing,
+    lessonsDone: [...lessonsDone],
   };
 }
 

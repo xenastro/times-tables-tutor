@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { FactMap } from '../components/FactMap';
+import { LESSONS, nextLesson } from '../engine/lessons';
 import { DAY, fluentCount, activeFacts } from '../engine/mastery';
 import { dayKey, practisedToday } from '../engine/stats';
 import { t } from '../i18n';
@@ -8,7 +9,7 @@ import { navigate } from '../router';
 import { useLearner } from './LearnerContext';
 
 export function Home() {
-  const { learner, state, events, syncStatus } = useLearner();
+  const { learner, state, events, syncStatus, settings } = useLearner();
   const {
     needRefresh: [needRefresh],
     updateServiceWorker,
@@ -27,12 +28,27 @@ export function Home() {
   const daysThisWeek = week.filter(Boolean).length;
 
   const { checkup } = state;
-  let cta: { label: string; note: string; primary: boolean };
-  if (!checkup.started) cta = { label: t('home.startCheckup'), note: t('home.startCheckupNote'), primary: true };
+  // Younger learners start with the "Understand" lessons, before the check-up.
+  const young = settings.profile === 'young';
+  const lesson = young ? nextLesson(state.lessonsDone) : null;
+  let cta: { label: string; note: string; primary: boolean; to: string };
+  if (lesson && !checkup.started)
+    cta = {
+      label: t('lesson.startLesson', { title: t(`lesson.title_${lesson}`) }),
+      note: t('lesson.startLessonNote'),
+      primary: true,
+      to: `/lesson/${lesson}`,
+    };
+  else if (!checkup.started) cta = { label: t('home.startCheckup'), note: t('home.startCheckupNote'), primary: true, to: '/practice' };
   else if (!checkup.done)
-    cta = { label: t('home.continueCheckup'), note: t('home.continueCheckupNote', { n: checkup.remaining.length }), primary: true };
-  else if (doneToday) cta = { label: t('home.again'), note: t('home.doneToday'), primary: false };
-  else cta = { label: t('home.start'), note: t('home.startNote'), primary: true };
+    cta = {
+      label: t('home.continueCheckup'),
+      note: t('home.continueCheckupNote', { n: checkup.remaining.length }),
+      primary: true,
+      to: '/practice',
+    };
+  else if (doneToday) cta = { label: t('home.again'), note: t('home.doneToday'), primary: false, to: '/practice' };
+  else cta = { label: t('home.start'), note: t('home.startNote'), primary: true, to: '/practice' };
 
   return (
     <main className="screen">
@@ -54,12 +70,33 @@ export function Home() {
       <section className="hero">
         <button
           className={`btn btn-big ${cta.primary ? 'btn-primary' : 'btn-soft'}`}
-          onClick={() => navigate('/practice')}
+          onClick={() => navigate(cta.to)}
         >
           {cta.label}
         </button>
         <p className="note">{cta.note}</p>
       </section>
+
+      {young && (
+        <section className="card stack" aria-labelledby="path-title">
+          <h2 id="path-title">{t('lesson.pathTitle')}</h2>
+          <p className="muted small">{t('lesson.pathNote')}</p>
+          <ol className="lesson-path">
+            {LESSONS.map((id) => {
+              const isDone = state.lessonsDone.includes(id);
+              const open = isDone || id === lesson;
+              return (
+                <li key={id}>
+                  <button className={`chip${isDone ? ' done' : ''}`} disabled={!open} onClick={() => navigate(`/lesson/${id}`)}>
+                    {isDone ? '✓ ' : ''}
+                    {t(`lesson.title_${id}`)}
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+        </section>
+      )}
 
       {checkup.started && (
         <section className="stat-row">
