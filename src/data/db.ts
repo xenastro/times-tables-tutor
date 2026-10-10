@@ -21,7 +21,7 @@ class TutorDB extends Dexie {
   kv!: Table<{ key: string; value: unknown }, string>;
 
   constructor() {
-    super('times-tables-tutor');
+    super('ashra');
     this.version(1).stores({
       events: 'id, learnerId, ts, synced',
       kv: 'key',

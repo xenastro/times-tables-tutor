@@ -46,7 +46,7 @@ Text lives in [src/locales](src/locales) (`en.json`, `ar.json`); a unit test che
 
 ```sh
 npx wrangler login
-npx wrangler d1 create tutor-db        # put the id in wrangler.jsonc
+npx wrangler d1 create ashra-db        # put the id in wrangler.jsonc
 npm run db:migrate:remote
 npx wrangler secret put INVITE_CODE
 npm run deploy

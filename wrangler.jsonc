@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "times-tables-tutor",
+  "name": "ashra",
   "main": "worker/index.ts",
   "compatibility_date": "2026-09-01",
   "assets": {
@@ -12,11 +12,11 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "tutor-db",
-      "database_id": "c7cba455-ab06-4073-9e9e-a1e8fc6792c0",
+      "database_name": "ashra-db",
+      "database_id": "e43a2a55-2e97-4814-a9f6-becedbb199cf",
       "migrations_dir": "migrations"
     }
   ],
-  "routes": [{ "pattern": "math.aburaddad.com", "custom_domain": true }],
+  "routes": [{ "pattern": "ashra.aburaddad.com", "custom_domain": true }],
   "observability": { "enabled": true }
 }

@@ -51,7 +51,7 @@ async function synth(body) {
         'Ocp-Apim-Subscription-Key': key,
         'Content-Type': 'application/ssml+xml',
         'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3',
-        'User-Agent': 'times-tables-tutor',
+        'User-Agent': 'ashra',
       },
       body: ssml,
     });

@@ -1,5 +1,5 @@
 {
-  "name": "times-tables-tutor",
+  "name": "ashra",
   "version": "0.1.0",
   "private": true,
   "description": "A phone-first app that helps children build calm, lasting fluency with the multiplication tables, with a parent dashboard for tracking progress.",
@@ -7,19 +7,19 @@
   "scripts": {
     "dev": "vite",
     "dev:api": "wrangler dev --port 8787",
-    "db:migrate:local": "wrangler d1 migrations apply tutor-db --local",
-    "db:migrate:remote": "wrangler d1 migrations apply tutor-db --remote",
+    "db:migrate:local": "wrangler d1 migrations apply ashra-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply ashra-db --remote",
     "build": "tsc -p tsconfig.json --noEmit && tsc -p worker/tsconfig.json --noEmit && vite build",
     "test": "vitest run",
     "test:api": "node scripts/smoke-api.mjs",
     "test:e2e": "playwright test",
-    "test:reset-limits": "wrangler d1 execute tutor-db --local --command \"DELETE FROM failures\"",
+    "test:reset-limits": "wrangler d1 execute ashra-db --local --command \"DELETE FROM failures\"",
     "icons": "node scripts/make-icons.mjs",
     "deploy": "npm run build && wrangler deploy"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xenastro/times-tables-tutor.git"
+    "url": "git+https://github.com/xenastro/ashra.git"
   },
   "license": "MIT",
   "dependencies": {

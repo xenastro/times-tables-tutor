@@ -1,6 +1,6 @@
 # Ashra (عشرة) — Product Spec
 
-> **Status:** v0.2 · 2026-10-10 · first release live at math.aburaddad.com
+> **Status:** v0.2 · 2026-10-10 · live at ashra.aburaddad.com
 > **Name:** Ashra (عشرة, "ten"): the base of every number and the last row of the tables. One word that reads easily in English and Arabic.
 
 ## 1. Goal
@@ -174,7 +174,7 @@ Five short lessons come before the check-up: **equal groups** (plates of apples)
 - **Data about children is kept to a minimum:** first name or nickname, birth year, and practice events. No analytics or third-party trackers.
 - **Built for opening to other families (release 3):**
   - **Password reset:** "Forgot password?" sends a one-time link that works for 60 minutes (only a hash is stored; the same reply whether or not the email has an account; rate-limited). Sending is pluggable ([worker/email.ts](worker/email.ts)); until a provider is configured the page says no email could be sent.
-  - **Account deletion:** "Delete my account" (password + typing DELETE) removes the parent, every child, all events, phones and voice clips at once.
+  - **Account deletion:** "Delete my account" (password + typing DELETE) removes the parent, every child, all events and phones at once.
   - **Privacy page** at `/privacy`, linked from the welcome screen, sign-in and the parent area, in English and Arabic.
 
 ## 8. Tech stack and hosting
@@ -186,7 +186,7 @@ Five short lessons come before the check-up: **equal groups** (plates of apples)
 | API | A Cloudflare Worker with the Hono router; the same Worker also serves the app files |
 | Database | Cloudflare D1 |
 | Tests | Vitest, covering the learning engine: scheduling, mastery and session building |
-| Hosting | Cloudflare Workers free tier at `math.aburaddad.com`; DNS is set up automatically on deploy |
+| Hosting | Cloudflare Workers free tier at `ashra.aburaddad.com`; DNS is set up automatically on deploy |
 | i18n | All text in `src/locales/en.json` and `ar.json`; Arabic is right to left (CSS logical properties), sums stay left to right |
 
 **Android setup:**
@@ -237,6 +237,4 @@ Five short lessons come before the check-up: **equal groups** (plates of apples)
 | Feelings check-ins | mostly 😌 / 🙂 |
 
 ## 11. Open questions
-- App name: our first learner will choose.
-- Confirm the subdomain (`math.aburaddad.com`?).
 - Fluency threshold and review gaps: start with the values in §4.3 and tune after 2–3 weeks of data.
