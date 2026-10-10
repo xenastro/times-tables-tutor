@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { allFacts, factKey, groupOf, homeTable, teachingOrder } from './facts';
 import { DAY, deriveState, FLUENT_LEVEL, fluentCount } from './mastery';
-import { CheckupSession, PracticeSession, type Question } from './session';
-import { evaluate, factBar, guideFor } from './guide';
+import { CheckupSession, expectedAnswer, PracticeSession, type Question } from './session';
+import { evaluate, factBar, guideFor, missingGuideFor } from './guide';
 import { trickFor, type TrickShow } from './tricks';
 import { dailyStats, practiceDaysLast7, troubleFacts } from './stats';
 import { withDefaults, type AnswerPayload, type LearnerSettings, type TutorEvent } from './types';
@@ -41,11 +41,11 @@ function makeStudent(known: Set<string>, rng: () => number) {
   const learned = new Set<string>();
   return (q: Question) => {
     if (q.showStrategyFirst) learned.add(q.key);
-    if (known.has(q.key)) return { given: q.a * q.b, latencyMs: 1200 + rng() * 800, hintUsed: false };
-    if (learned.has(q.key) && rng() < 0.8) return { given: q.a * q.b, latencyMs: 3000 + rng() * 3000, hintUsed: false };
+    if (known.has(q.key)) return { given: expectedAnswer(q), latencyMs: 1200 + rng() * 800, hintUsed: false };
+    if (learned.has(q.key) && rng() < 0.8) return { given: expectedAnswer(q), latencyMs: 3000 + rng() * 3000, hintUsed: false };
     // After a miss the app shows the answer and its picture, so the fact starts to stick.
     if (q.mode === 'practice') learned.add(q.key);
-    return { given: q.a * q.b + 1, latencyMs: 6000, hintUsed: false };
+    return { given: expectedAnswer(q) + 1, latencyMs: 6000, hintUsed: false };
   };
 }
 
@@ -190,6 +190,117 @@ describe('animated tricks', () => {
     expect(readRow(trickFor('tenTrick', 10, 12)!, 0)).toBe('10×12=');
     expect(readRow(trickFor('elevenTrick', 4, 11)!, 0)).toBe('4×11=');
     expect(readRow(trickFor('nineTrick', 9, 7)!, 0)).toBe('9×7=63');
+  });
+});
+
+/* ---------- missing-number questions ---------- */
+
+describe('missing-number guides', () => {
+  const cases: [number, number, 'a' | 'b'][] = [];
+  for (let a = 2; a <= 12; a++) for (let b = 2; b <= 12; b++) for (const m of ['a', 'b'] as const) cases.push([a, b, m]);
+
+  it('count on or back from an easy fact, one group per step, keeping the known factor in place', () => {
+    for (const [a, b, missing] of cases) {
+      const g = missingGuideFor(a, b, missing);
+      const known = missing === 'a' ? b : a;
+      const hidden = missing === 'a' ? a : b;
+      expect(g.steps.length, `${a}x${b}`).toBeLessThanOrEqual(4);
+      for (const s of g.steps) {
+        expect(s.answer).toBe(evaluate(s.expr));
+        expect(Number.isInteger(s.answer)).toBe(true);
+        expect(s.bar.segments.length).toBeLessThanOrEqual(12);
+        expect(s.bar.size).toBe(known);
+        if (s.expr.op === 'times') expect(missing === 'a' ? s.expr.y : s.expr.x).toBe(known);
+        if (s.expr.op === 'plus' || s.expr.op === 'minus') expect(s.expr.y).toBe(known);
+      }
+      const last = g.steps.at(-1)!;
+      expect(last.expr).toMatchObject({ op: 'gap', known, p: a * b, pos: missing === 'a' ? 'x' : 'y' });
+      expect(last.answer).toBe(hidden);
+      // The step before the gap lands exactly on the product.
+      if (g.steps.length > 1) expect(g.steps.at(-2)!.answer).toBe(a * b);
+      // The final picture has one block per group, so it can be counted.
+      expect(last.bar.segments.filter((t) => t === 'a').length).toBe(hidden);
+    }
+  });
+
+  it('introduce the idea with a known fact first', () => {
+    const g = missingGuideFor(8, 7, 'a', true);
+    expect(g.steps.map((s) => s.answer)).toEqual([56, 8]);
+    expect(g.steps[0].expr).toMatchObject({ op: 'times', x: 8, y: 7 });
+    expect(g.steps[1].note).toBe('missingTrick');
+  });
+
+  it('end with a short that turns the fact into a division', () => {
+    for (const [a, b, missing] of cases) {
+      const show = trickFor('missingTrick', a, b, missing)!;
+      const m = missing === 'a' ? a : b;
+      const known = missing === 'a' ? b : a;
+      expect(readRow(show, 0)).toBe(`${a}×${b}=${a * b}`);
+      expect(readRow(show, show.frames.length - 1)).toBe(`${a * b}÷${known}=${m}`);
+      for (const f of show.frames) for (const tok of show.tokens) expect(f.tokens[tok.id].x).toBeLessThan(show.slots);
+    }
+    expect(trickFor('missingTrick', 8, 7)).toBeNull();
+  });
+});
+
+describe('missing-number questions in practice', () => {
+  const settings = withDefaults(null);
+  const allKnown = new Set(allFacts(10).map((f) => f.key));
+
+  it('never change the multiplication level', () => {
+    const events = [answer(6, 7, T0, { mode: 'checkup' })];
+    const before = deriveState(events, settings).facts['6x7'].level;
+    events.push(answer(6, 7, T0 + DAY, { form: 'missing', missing: 'a', given: 5, correct: false }));
+    events.push(answer(6, 7, T0 + DAY + 1, { form: 'missing', missing: 'b', given: 7 }));
+    const s = deriveState(events, settings);
+    expect(s.facts['6x7'].level).toBe(before);
+    expect(s.facts['6x7'].attempts).toBe(1);
+    expect(s.facts['6x7'].missingAttempts).toBe(2);
+    expect(s.missing).toEqual({ attempts: 2, correct: 1 });
+  });
+
+  it('are mixed in only for fluent facts, a few per session, with an introduction the first time', () => {
+    const student = (q: Question) => ({ given: expectedAnswer(q), latencyMs: 1500, hintUsed: false });
+    let { events } = runCheckup(settings, makeStudent(allKnown, seededRng(21)), T0);
+    let introSeen = 0;
+    for (let day = 1; day <= 4; day++) {
+      const state = deriveState(events, settings);
+      const s = new PracticeSession(state, settings, `p${day}`, T0 + day * DAY, seededRng(30 + day));
+      const out: TutorEvent[] = [];
+      let t = T0 + day * DAY;
+      let i = 0;
+      for (let q = s.next(); q; q = s.next(), i++) {
+        if (q.form === 'missing') {
+          expect(i).toBeGreaterThanOrEqual(4);
+          expect(state.facts[q.key].level).toBeGreaterThanOrEqual(FLUENT_LEVEL);
+          expect(Math.min(q.a, q.b)).toBeGreaterThanOrEqual(2);
+          if (q.showStrategyFirst) {
+            introSeen++;
+            expect(q.a).not.toBe(q.b);
+          }
+        }
+        for (const pe of s.record(q, student(q)).events) out.push(ev(pe.type, (t += 3000), pe.payload));
+      }
+      expect(s.missingAsked).toBeLessThanOrEqual(4);
+      if (day === 1) expect(s.missingAsked).toBeGreaterThan(0);
+      events = events.concat(out);
+    }
+    expect(introSeen).toBe(1);
+  });
+
+  it('come back once after a wrong answer', () => {
+    const { events } = runCheckup(settings, makeStudent(allKnown, seededRng(22)), T0);
+    const s = new PracticeSession(deriveState(events, settings), settings, 'p', T0 + DAY, seededRng(5));
+    const asked: Question[] = [];
+    let failed: string | null = null;
+    for (let q = s.next(); q; q = s.next()) {
+      asked.push(q);
+      const wrong = q.form === 'missing' && !failed;
+      if (wrong) failed = q.key;
+      s.record(q, { given: wrong ? 0 : expectedAnswer(q), latencyMs: 1500, hintUsed: false });
+    }
+    expect(failed).not.toBeNull();
+    expect(asked.filter((q) => q.key === failed && q.form === 'missing').length).toBeGreaterThanOrEqual(2);
   });
 });
 

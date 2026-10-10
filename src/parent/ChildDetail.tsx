@@ -6,7 +6,7 @@ import { TurnaroundToggle } from '../components/TurnaroundShow';
 import { factKey } from '../engine/facts';
 import { activeFacts, DAY, deriveState, fluentCount, median } from '../engine/mastery';
 import { dailyStats, factHistory, feelings, practiceDaysLast7, sessionHistory, troubleFacts } from '../engine/stats';
-import { withDefaults, type AnswerPayload, type TutorEvent } from '../engine/types';
+import { isProductAnswer, withDefaults, type AnswerPayload, type TutorEvent } from '../engine/types';
 import { api } from '../data/api';
 import { t } from '../i18n';
 import { goBack, navigate } from '../router';
@@ -33,7 +33,8 @@ async function loadAllEvents(id: string): Promise<TutorEvent[]> {
 function windowStats(events: TutorEvent[], from: number, to: number) {
   const answers = events
     .filter((e) => e.type === 'answer' && e.ts >= from && e.ts < to)
-    .map((e) => e.payload as AnswerPayload);
+    .map((e) => e.payload as AnswerPayload)
+    .filter(isProductAnswer);
   const correct = answers.filter((a) => a.correct);
   return {
     count: answers.length,
@@ -181,6 +182,19 @@ export function ChildDetail({ id }: { id: string }) {
             ) : (
               <p className="muted">{t('parent.troubleNone')}</p>
             )}
+          </section>
+
+          <section className="card stack">
+            <h2>{t('parent.missingTitle')}</h2>
+            <p className="muted small">{t('parent.missingNote')}</p>
+            <p className="num">
+              {state.missing.attempts
+                ? t('parent.missingStats', {
+                    n: state.missing.attempts,
+                    pct: Math.round((state.missing.correct / state.missing.attempts) * 100),
+                  })
+                : t('parent.missingNone')}
+            </p>
           </section>
 
           <section className="card stack">

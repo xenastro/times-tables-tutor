@@ -1,6 +1,6 @@
 import { factKey } from './facts';
 import { DAY, median, type LearnerState } from './mastery';
-import type { AnswerPayload, Feeling, FeelingPayload, SessionEndPayload, TutorEvent } from './types';
+import { isProductAnswer, type AnswerPayload, type Feeling, type FeelingPayload, type SessionEndPayload, type TutorEvent } from './types';
 
 export function dayKey(ts: number): string {
   const d = new Date(ts);
@@ -28,7 +28,7 @@ export function dailyStats(events: TutorEvent[], now: number, days = 14): DaySta
       bucket.answers++;
       if (p.correct) {
         bucket.correct++;
-        if (!p.hinted) bucket.lat.push(p.latencyMs);
+        if (!p.hinted && isProductAnswer(p)) bucket.lat.push(p.latencyMs);
       }
     } else if (e.type === 'session_end') {
       bucket.ms += (e.payload as SessionEndPayload).durationMs;
@@ -104,7 +104,7 @@ export function factHistory(events: TutorEvent[], key: string): { ts: number; co
   return events
     .filter((e) => e.type === 'answer')
     .map((e) => ({ e, p: e.payload as AnswerPayload }))
-    .filter(({ p }) => factKey(p.a, p.b) === key)
+    .filter(({ p }) => factKey(p.a, p.b) === key && isProductAnswer(p))
     .sort((x, y) => x.e.ts - y.e.ts)
     .map(({ e, p }) => ({ ts: e.ts, correct: p.correct, latencyMs: p.latencyMs }));
 }

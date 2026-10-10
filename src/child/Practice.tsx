@@ -3,7 +3,8 @@ import { BarModel } from '../components/StrategyView';
 import { TurnaroundShow } from '../components/TurnaroundShow';
 import { factBar } from '../engine/guide';
 import { FLUENT_LEVEL } from '../engine/mastery';
-import { CheckupSession, PracticeSession, type Question } from '../engine/session';
+import { CheckupSession, expectedAnswer, PracticeSession, type Question } from '../engine/session';
+import { isProductAnswer, type AnswerPayload } from '../engine/types';
 import { newId } from '../data/api';
 import { t } from '../i18n';
 import { navigate } from '../router';
@@ -51,9 +52,9 @@ export function Practice() {
     () =>
       new Set(
         events
-          .filter((e) => e.type === 'answer')
+          .filter((e) => e.type === 'answer' && isProductAnswer(e.payload as AnswerPayload))
           .map((e) => {
-            const p = e.payload as { a: number; b: number };
+            const p = e.payload as AnswerPayload;
             return `${p.a}x${p.b}`;
           }),
       ),
@@ -63,7 +64,11 @@ export function Practice() {
   );
   const isTurnedAround = (q: Question) =>
     // Pick a clearly non-square fact (like 3 × 7), so the turn is easy to see.
-    Math.abs(q.a - q.b) >= 2 && Math.min(q.a, q.b) >= 2 && seenOrientations.has(`${q.b}x${q.a}`) && !seenOrientations.has(`${q.a}x${q.b}`);
+    q.form !== 'missing' &&
+    Math.abs(q.a - q.b) >= 2 &&
+    Math.min(q.a, q.b) >= 2 &&
+    seenOrientations.has(`${q.b}x${q.a}`) &&
+    !seenOrientations.has(`${q.a}x${q.b}`);
   const showBars = settings.pictureHints !== 'off';
 
   const finish = useCallback(() => {
@@ -127,7 +132,7 @@ export function Practice() {
     (q: Question, given: number | null, hintUsed: boolean) => {
       const res = session.record(q, { given, latencyMs: performance.now() - askedAt.current, hintUsed });
       addEvents(res.events);
-      seenOrientations.add(`${q.a}x${q.b}`);
+      if (q.form !== 'missing') seenOrientations.add(`${q.a}x${q.b}`);
       return res;
     },
     [addEvents, seenOrientations, session],
@@ -158,7 +163,8 @@ export function Practice() {
       // Otherwise, work it out together.
       const count = (mistakes.current.get(q.key) ?? 0) + 1;
       mistakes.current.set(q.key, count);
-      const known = startState.facts[q.key].level >= FLUENT_LEVEL;
+      // (A missing-number slip is always worked out together: it's a new skill.)
+      const known = startState.facts[q.key].level >= FLUENT_LEVEL && q.form !== 'missing';
       if (known && count === 1) setPhase({ kind: 'reveal', q });
       else {
         addEvents([{ type: 'strategy_viewed', payload: { a: q.a, b: q.b, sessionId: session.sessionId } }]);
@@ -182,7 +188,7 @@ export function Practice() {
       const next = (input + key).replace(/^0+(?=\d)/, '').slice(0, MAX_DIGITS);
       setInput(next);
       // Auto-submit once the answer has as many digits as the right answer.
-      if (next.length >= String(phase.q.a * phase.q.b).length) submit(Number(next));
+      if (next.length >= String(expectedAnswer(phase.q)).length) submit(Number(next));
     },
     [input, phase, submit],
   );
@@ -232,8 +238,21 @@ export function Practice() {
     );
   }
 
+  // A picture of a missing-number question would let the hidden number be counted, so none there.
   const alwaysPicture =
-    settings.pictureHints === 'always' && phase.kind === 'ask' && HARD_KINDS.includes(phase.q.kind);
+    settings.pictureHints === 'always' &&
+    phase.kind === 'ask' &&
+    HARD_KINDS.includes(phase.q.kind) &&
+    phase.q.form !== 'missing';
+
+  const answerBox = (phase.kind === 'ask' || phase.kind === 'feedback') && (
+    <span
+      className={`answer-box num ${phase.kind === 'feedback' ? (isCheckup ? 'neutral' : 'good') : 'active'}`}
+      aria-label="Your answer"
+    >
+      {phase.kind === 'feedback' ? (phase.given ?? '–') : input}
+    </span>
+  );
 
   return (
     <main className="practice">
@@ -283,6 +302,8 @@ export function Practice() {
           mode={phase.mode}
           showBars={showBars}
           onFinish={onGuideFinish}
+          missing={phase.q.form === 'missing' ? phase.q.missing : undefined}
+          intro={phase.q.form === 'missing' && phase.q.showStrategyFirst && phase.mode === 'new'}
         />
       )}
 
@@ -313,19 +334,30 @@ export function Practice() {
       {(phase.kind === 'ask' || phase.kind === 'feedback') && (
         <>
           <div className="question-area">
-            <div className="question num" aria-live="polite">
-              {phase.q.a}
-              <span className="times">×</span>
-              {phase.q.b}
-            </div>
-            <div
-              className={`answer-box num ${
-                phase.kind === 'feedback' ? (isCheckup ? 'neutral' : 'good') : 'active'
-              }`}
-              aria-label="Your answer"
-            >
-              {phase.kind === 'feedback' ? (phase.given ?? '–') : input}
-            </div>
+            {phase.q.form === 'missing' ? (
+              // ? × 7 = 56: the answer box sits in the gap.
+              <div
+                className="question question-missing num"
+                aria-live="polite"
+                dir="ltr"
+                data-expr={phase.q.missing === 'a' ? `? × ${phase.q.b} = ${phase.q.a * phase.q.b}` : `${phase.q.a} × ? = ${phase.q.a * phase.q.b}`}
+              >
+                {phase.q.missing === 'a' ? answerBox : phase.q.a}
+                <span className="times">×</span>
+                {phase.q.missing === 'b' ? answerBox : phase.q.b}
+                <span className="times">=</span>
+                {phase.q.a * phase.q.b}
+              </div>
+            ) : (
+              <>
+                <div className="question num" aria-live="polite" dir="ltr" data-expr={`${phase.q.a} × ${phase.q.b}`}>
+                  {phase.q.a}
+                  <span className="times">×</span>
+                  {phase.q.b}
+                </div>
+                {answerBox}
+              </>
+            )}
             {alwaysPicture && <BarModel bar={factBar(phase.q.a, phase.q.b)} compact />}
           </div>
           <div className="hint-row">

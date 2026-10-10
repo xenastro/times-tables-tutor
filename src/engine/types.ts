@@ -23,10 +23,13 @@ export interface TutorEvent<P = unknown> {
 
 export type AnswerMode = 'calibration' | 'checkup' | 'practice';
 
+/** "product": 7 × 8 = ?  ·  "missing": ? × 8 = 56 (a first step into division). */
+export type QuestionForm = 'product' | 'missing';
+
 export interface AnswerPayload {
   a: number;
   b: number;
-  /** null when the learner chose "Not sure yet". */
+  /** null when the learner chose "Not sure yet". For a missing-number question, the number typed for the gap. */
   given: number | null;
   correct: boolean;
   latencyMs: number;
@@ -34,6 +37,14 @@ export interface AnswerPayload {
   /** True when a strategy card was on screen for this fact just before answering. */
   hinted: boolean;
   sessionId: string;
+  /** Absent on older events, which are all products. */
+  form?: QuestionForm;
+  /** Which factor was hidden, for a missing-number question. */
+  missing?: 'a' | 'b';
+}
+
+export function isProductAnswer(p: AnswerPayload): boolean {
+  return (p.form ?? 'product') === 'product';
 }
 
 export interface CheckupKeysPayload {

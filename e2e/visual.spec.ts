@@ -1,25 +1,9 @@
 import { expect, test, type APIRequestContext, type Browser } from '@playwright/test';
-import { completeGuide, solveExpr } from './helpers';
-
-const INVITE = process.env.INVITE_CODE ?? 'family-test';
-const SHOTS = process.env.SHOTS_DIR ?? 'e2e-results/shots';
+import { completeGuide, INVITE, linkPhone, newLearner, padReady, readQuestion, SHOTS, solveExpr } from './helpers';
 
 /** Creates a parent + child through the API and returns a linked phone page. */
 async function linkedPhone(browser: Browser, request: APIRequestContext, settings: object, colorScheme: 'light' | 'dark') {
-  await request.post('/api/auth/signup', {
-    data: { email: `v+${Date.now()}${Math.random()}@example.com`, password: 'test password 123', inviteCode: INVITE },
-  });
-  const { learner } = await (
-    await request.post('/api/learners', { data: { displayName: 'Sam', avatar: '🐙', theme: 'violet', settings } })
-  ).json();
-  const { code } = await (await request.post(`/api/learners/${learner.id}/pairing-code`)).json();
-  const ctx = await browser.newContext({ colorScheme });
-  const page = await ctx.newPage();
-  await page.goto('/');
-  await page.getByLabel('Code from your parent').fill(code);
-  await page.getByRole('button', { name: 'Link this phone' }).click();
-  await expect(page.getByRole('heading', { name: 'Hi, Sam' })).toBeVisible();
-  return page;
+  return linkPhone(browser, request, await newLearner(request, settings), { colorScheme });
 }
 
 test('younger learner sees pictures and a short check-up (dark mode)', async ({ browser, playwright, baseURL }) => {
@@ -76,8 +60,8 @@ test('standard learner light mode: hint button and map sheet', async ({ browser,
   // Answer the check-up correctly so practice starts with reviews and new facts.
   while (!(await page.getByRole('button', { name: 'Back home' }).isVisible())) {
     const q = page.locator('.question');
-    if ((await q.isVisible()) && (await page.locator('.numpad button').first().isEnabled({ timeout: 1000 }).catch(() => false))) {
-      const [a, b] = ((await q.textContent()) ?? '').split('×').map((s) => Number(s.trim()));
+    if ((await q.isVisible()) && (await padReady(page))) {
+      const { a, b } = await readQuestion(page);
       const ans = a === 7 || b === 7 ? null : a * b;
       if (ans === null) await page.getByRole('button', { name: 'Not sure yet' }).click();
       else for (const d of String(ans)) await page.locator('.numpad').getByRole('button', { name: d, exact: true }).click();

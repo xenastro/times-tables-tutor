@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { solveExpr, tapNumber } from './helpers';
+import { readQuestion, solveExpr, tapNumber, type AskedQuestion } from './helpers';
 
 const INVITE = process.env.INVITE_CODE ?? 'family-test';
 const SHOTS = process.env.SHOTS_DIR ?? 'e2e-results/shots';
@@ -14,7 +14,7 @@ let wrongGuideStepDone = false;
  * Plays a session until the summary appears. `answerFor` decides what to type for a question
  * (null = "Not sure yet"). Returns how many questions were answered.
  */
-async function playSession(page: Page, answerFor: (a: number, b: number, i: number) => number | null, shotPrefix: string) {
+async function playSession(page: Page, answerFor: (q: AskedQuestion, i: number) => number | null, shotPrefix: string) {
   let answered = 0;
   const seen = new Set<string>();
   for (let guard = 0; guard < 400; guard++) {
@@ -68,15 +68,15 @@ async function playSession(page: Page, answerFor: (a: number, b: number, i: numb
     const q = page.locator('.question');
     const pad = page.locator('.numpad button').first();
     if ((await q.isVisible()) && (await pad.isEnabled({ timeout: 1000 }).catch(() => false))) {
-      const text = (await q.textContent()) ?? '';
-      const [a, b] = text.split('×').map((s) => Number(s.trim()));
+      const asked = await readQuestion(page);
       if (!seen.has('question')) await shot(page, `${shotPrefix}-question`), seen.add('question');
-      const ans = answerFor(a, b, answered);
+      if (asked.missing && !seen.has('missing')) await shot(page, `${shotPrefix}-missing`), seen.add('missing');
+      const ans = answerFor(asked, answered);
       if (ans === null) await page.getByRole('button', { name: 'Not sure yet' }).click();
       else {
         await tapNumber(page, ans);
         // A shorter wrong answer needs an explicit check.
-        if (String(ans).length < String(a * b).length) await page.getByRole('button', { name: 'Check' }).click();
+        if (String(ans).length < String(asked.expected).length) await page.getByRole('button', { name: 'Check' }).click();
       }
       answered++;
     }
@@ -122,7 +122,7 @@ test('parent sets up, child does check-up and practice, parent sees progress', a
   await child.getByRole('button', { name: "Let's see what you already know" }).click();
   const checkupAnswered = await playSession(
     child,
-    (a, b) => {
+    ({ a, b }) => {
       if (a === 7 || b === 7 || a === 8 || b === 8) return null;
       if ((a === 6 || b === 6) && a * b > 30) return a * b + 2;
       return a * b;
@@ -139,7 +139,7 @@ test('parent sets up, child does check-up and practice, parent sees progress', a
 
   // ---------------- Practice: mostly right, a wrong answer every 7th question.
   await child.getByRole('button', { name: "Start today's practice" }).click();
-  const practiced = await playSession(child, (a, b, i) => (i % 7 === 3 ? Math.max(0, a * b - 1) : a * b), '09-practice');
+  const practiced = await playSession(child, (q, i) => (i % 7 === 3 ? Math.max(0, q.expected - 1) : q.expected), '09-practice');
   expect(practiced).toBeGreaterThanOrEqual(20);
   await expect(child.getByRole('heading', { name: 'Session done' })).toBeVisible();
   await shot(child, '10-practice-summary');
@@ -179,7 +179,7 @@ test('parent sets up, child does check-up and practice, parent sees progress', a
   // ---------------- Offline: practice still works and syncs later
   await childCtx.setOffline(true);
   await child.getByRole('button', { name: 'Practise a little more' }).click();
-  await playSession(child, (a, b) => a * b, '16-offline');
+  await playSession(child, (q) => q.expected, '16-offline');
   await child.getByRole('button', { name: 'Back home' }).click();
   await expect(child.getByText(/Offline/)).toBeVisible({ timeout: 10_000 });
   await childCtx.setOffline(false);

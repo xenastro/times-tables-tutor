@@ -1,5 +1,5 @@
 import { allFacts, factKey, groupOf, homeTable, parseKey, RULE_TABLES, teachingOrder, type Fact } from './facts';
-import type { AnswerPayload, CheckupKeysPayload, LearnerSettings, TutorEvent } from './types';
+import { isProductAnswer, type AnswerPayload, type CheckupKeysPayload, type LearnerSettings, type TutorEvent } from './types';
 
 export const DAY = 24 * 60 * 60 * 1000;
 const HOUR = 60 * 60 * 1000;
@@ -26,6 +26,9 @@ export interface FactState extends Fact {
   /** Outcomes of recent answers (most recent last, max 10). */
   recentResults: boolean[];
   seenInCheckup: boolean;
+  /** Missing-number questions (? × 7 = 56) are tracked apart: they never change the level. */
+  missingAttempts: number;
+  missingCorrect: number;
 }
 
 export interface LearnerState {
@@ -36,6 +39,8 @@ export interface LearnerState {
   /** Largest factor currently in play (10, or 12 once unlocked). */
   activeMax: number;
   checkup: { done: boolean; started: boolean; remaining: string[] };
+  /** Totals for missing-number questions; `attempts > 0` means the intro has been seen. */
+  missing: { attempts: number; correct: number };
 }
 
 const DEFAULT_THRESHOLD_MS = 4000;
@@ -67,6 +72,8 @@ function blankFact(f: Fact): FactState {
     recentLatencies: [],
     recentResults: [],
     seenInCheckup: false,
+    missingAttempts: 0,
+    missingCorrect: 0,
   };
 }
 
@@ -102,6 +109,7 @@ export function deriveState(events: TutorEvent[], settings: LearnerSettings): Le
   let threshold = thresholdFor(null, settings.thresholdOffsetMs);
   let checkupStarted = false;
   let checkupEnded = false;
+  const missing = { attempts: 0, correct: 0 };
 
   for (const e of sorted) {
     if (e.type === 'session_start' && (e.payload as { kind?: string }).kind === 'checkup') checkupStarted = true;
@@ -125,6 +133,17 @@ export function deriveState(events: TutorEvent[], settings: LearnerSettings): Le
     const p = e.payload as AnswerPayload;
     const f = facts[factKey(p.a, p.b)];
     if (!f) continue;
+
+    if (!isProductAnswer(p)) {
+      // A different skill: counted, but it neither raises nor lowers the multiplication level.
+      f.missingAttempts++;
+      missing.attempts++;
+      if (p.correct) {
+        f.missingCorrect++;
+        missing.correct++;
+      }
+      continue;
+    }
 
     f.attempts++;
     f.lastSeenAt = e.ts;
@@ -177,6 +196,7 @@ export function deriveState(events: TutorEvent[], settings: LearnerSettings): Le
     thresholdMs: threshold,
     activeMax,
     checkup: { started: checkupStarted, done: checkupEnded || remaining.length === 0, remaining },
+    missing,
   };
 }
 

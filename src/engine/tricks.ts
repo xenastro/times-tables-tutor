@@ -265,9 +265,71 @@ export function nineTrick(a: number, b: number): TrickShow {
   };
 }
 
+/* ------------------------------------------------------------------ ? × 7 = 56 */
+
+/**
+ * The link between a missing-number puzzle, the multiplication fact and division:
+ * 8 × 7 = 56 → the 8 hides (? × 7 = 56) → it comes back → 56 ÷ 7 = 8.
+ * Shown only after the learner has filled the gap.
+ */
+export function missingTrick(a: number, b: number, missing: 'a' | 'b'): TrickShow {
+  const m = missing === 'a' ? a : b;
+  const known = missing === 'a' ? b : a;
+  const p = a * b;
+  const tokens: Token[] = [];
+  const add = (prefix: string, n: number) =>
+    digits(n).map((d, i) => {
+      tokens.push({ id: `${prefix}${i}`, text: d });
+      return `${prefix}${i}`;
+    });
+  const M = add('m', m);
+  const K = add('k', known);
+  const P = add('p', p);
+  tokens.push(
+    { id: 'times', text: '×', sym: true },
+    { id: 'div', text: '÷', sym: true },
+    { id: 'eq', text: '=', sym: true },
+    { id: 'gap', text: '?' },
+  );
+
+  // Before: the fact as asked. After: the division.
+  const A = row(missing === 'a' ? [...M, 'times', ...K, 'eq', ...P] : [...K, 'times', ...M, 'eq', ...P]);
+  const D = row([...P, 'div', ...K, 'eq', ...M]);
+  const gapX = M.reduce((s, id) => s + A[id].x, 0) / M.length;
+  const base: Record<string, TokenState> = { ...A, div: { x: A.times.x, hidden: true }, gap: { x: gapX, hidden: true } };
+  const each = (ids: string[], s: Partial<TokenState>) => Object.fromEntries(ids.map((id) => [id, s]));
+  const lifted = { ...each(M, { y: -1 }) };
+  const at = (layout: Record<string, TokenState>, ids: string[], y: number, extra: Partial<TokenState> = {}) =>
+    Object.fromEntries(ids.map((id) => [id, { x: layout[id].x, y, ...extra }]));
+  const moving = { ...at(D, P, -1), ...at(D, K, 0), ...at(D, M, 1, { lit: true }), eq: { x: D.eq.x }, times: { hidden: true } };
+  const settled = { ...at(D, P, 0), ...at(D, K, 0), ...at(D, M, 0, { lit: true }), eq: { x: D.eq.x }, times: { hidden: true } };
+
+  const vars = { m, n: known, p };
+  return {
+    slots: P.length + K.length + M.length + 2,
+    rowsAbove: 1,
+    rowsBelow: 1,
+    tokens,
+    summary: 'trick.missing.summary',
+    summaryVars: vars,
+    frames: [
+      frame(1000, null, base),
+      frame(700, 'trick.missing.hide', base, lifted, vars),
+      frame(1600, 'trick.missing.puzzle', base, { ...lifted, gap: { hidden: false, lit: true } }, vars),
+      frame(600, 'trick.missing.back', base, each(M, { lit: true }), vars),
+      frame(1200, 'trick.missing.back', base, each(M, { lit: true }), vars),
+      frame(900, 'trick.missing.divide', base, moving, vars),
+      frame(900, 'trick.missing.divide', base, settled, vars),
+      frame(0, 'trick.missing.divide', base, { ...settled, div: { x: D.div.x, hidden: false } }, vars),
+    ],
+  };
+}
+
 /** Which animated trick (if any) goes with a guide's closing note. */
-export function trickFor(note: string, a: number, b: number): TrickShow | null {
+export function trickFor(note: string, a: number, b: number, missing?: 'a' | 'b'): TrickShow | null {
   switch (note) {
+    case 'missingTrick':
+      return missing ? missingTrick(a, b, missing) : null;
     case 'sevenEightTrick':
       return sevenEightTrick(a === 8);
     case 'tenTrick':

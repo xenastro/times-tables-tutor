@@ -8,7 +8,7 @@ import {
   type FactState,
   type LearnerState,
 } from './mastery';
-import type { AnswerMode, EventType, LearnerSettings } from './types';
+import type { AnswerMode, EventType, LearnerSettings, QuestionForm } from './types';
 
 export type QuestionKind =
   | 'calibration'
@@ -29,8 +29,18 @@ export interface Question {
   key: string;
   kind: QuestionKind;
   mode: AnswerMode;
-  /** Show the strategy card before asking (new facts). */
+  /** Show the strategy card before asking (new facts, or the first missing-number question ever). */
   showStrategyFirst: boolean;
+  /** Absent means "product". */
+  form?: QuestionForm;
+  /** For a missing-number question: which factor is hidden. */
+  missing?: 'a' | 'b';
+}
+
+/** The number the learner should type: the product, or the hidden factor. */
+export function expectedAnswer(q: Pick<Question, 'a' | 'b' | 'form' | 'missing'>): number {
+  if (q.form === 'missing') return q.missing === 'a' ? q.a : q.b;
+  return q.a * q.b;
 }
 
 export interface AnswerInput {
@@ -74,8 +84,13 @@ function answerEvent(q: Question, input: AnswerInput, correct: boolean, sessionI
       mode: q.mode,
       hinted: q.showStrategyFirst || input.hintUsed,
       sessionId,
+      ...(q.form === 'missing' ? { form: 'missing', missing: q.missing } : {}),
     },
   };
+}
+
+function asMissing(q: Question, rng: Rng, intro: boolean): Question {
+  return { ...q, form: 'missing', missing: rng() < 0.5 ? 'a' : 'b', showStrategyFirst: intro };
 }
 
 /* ------------------------------------------------------------------------------------------ */
@@ -149,7 +164,7 @@ export class CheckupSession {
 
   record(q: Question, input: AnswerInput): RecordResult {
     if (this.queue[0] === q) this.queue.shift();
-    const correct = input.given === q.a * q.b;
+    const correct = input.given === expectedAnswer(q);
     this.answered++;
     if (correct) this.correctCount++;
     const events: PendingEvent[] = [answerEvent(q, input, correct, this.sessionId)];
@@ -209,6 +224,11 @@ const HARD_CAP_EXTRA = 8;
 const WRAP_UP_EXTRA = 4;
 /** A group of tables opens once this share of the previous groups is at level 2+. */
 const GROUP_GATE = 0.7;
+/** Missing-number questions (? × 7 = 56): only from fluent facts, a few per session, never at the very start or end. */
+const MISSING_SHARE = 0.3;
+const MAX_MISSING = 4;
+const MAX_MISSING_YOUNG = 3;
+const MISSING_FROM = 4;
 
 interface Scheduled {
   at: number;
@@ -236,6 +256,9 @@ export class PracticeSession {
   private finished = false;
   private thresholdMs: number;
   private rng: Rng;
+  missingAsked = 0;
+  private maxMissing: number;
+  private missingIntroDone: boolean;
 
   constructor(
     state: LearnerState,
@@ -249,6 +272,8 @@ export class PracticeSession {
     this.rng = rng;
     this.thresholdMs = state.thresholdMs;
     this.maxNew = settings.profile === 'young' ? 2 : 3;
+    this.maxMissing = settings.profile === 'young' ? MAX_MISSING_YOUNG : MAX_MISSING;
+    this.missingIntroDone = state.missing.attempts > 0;
 
     const facts = activeFacts(state);
     this.reviews = facts
@@ -342,7 +367,26 @@ export class PracticeSession {
     const pool = this.fillers.filter((f) => !recent.has(f.key) && this.canAsk(f.key));
     if (!pool.length) return null;
     const f = pool[Math.floor(this.rng() * pool.length)];
-    return question(f, 'filler', 'practice', this.rng);
+    const q = question(f, 'filler', 'practice', this.rng);
+    return this.maybeMissing(q, f) ?? q;
+  }
+
+  /**
+   * Sometimes turn a filler (never a due review, so no review is lost) into "? × 7 = 56".
+   * Only for fluent facts without a ×1: the multiplication must already be known.
+   */
+  private maybeMissing(q: Question, f: FactState): Question | null {
+    if (f.level < FLUENT_LEVEL || Math.min(f.a, f.b) < 2) return null;
+    if (this.missingAsked >= this.maxMissing) return null;
+    if (this.answered < MISSING_FROM || this.answered >= this.length - 3) return null;
+    // The very first one comes with an introduction, on a fact like 8 × 7 (with 8 × 8 you can't
+    // tell which 8 is hiding); after that, mix them in.
+    if (!this.missingIntroDone && f.a === f.b) return null;
+    if (this.missingIntroDone && this.rng() >= MISSING_SHARE) return null;
+    this.missingAsked++;
+    const intro = !this.missingIntroDone;
+    this.missingIntroDone = true;
+    return asMissing(q, this.rng, intro);
   }
 
   private hard(): Question | null {
@@ -377,17 +421,23 @@ export class PracticeSession {
   }
 
   record(q: Question, input: AnswerInput): RecordResult {
-    const correct = input.given === q.a * q.b;
+    const correct = input.given === expectedAnswer(q);
+    const isMissing = q.form === 'missing';
     const fluent = correct && !input.hintUsed && !q.showStrategyFirst && input.latencyMs <= this.thresholdMs;
     this.answered++;
     if (correct) this.correctCount++;
     this.lastCorrect = correct;
-    this.lastWasHard = HARD_KINDS.includes(q.kind) || !correct;
+    this.lastWasHard = HARD_KINDS.includes(q.kind) || !correct || isMissing;
     this.recentKeys.push(q.key);
     this.timesAsked.set(q.key, (this.timesAsked.get(q.key) ?? 0) + 1);
 
     const f = parseKey(q.key);
-    if (!correct) {
+    if (isMissing) {
+      // One more go at the same puzzle a little later, after working it out together.
+      if (!correct && !this.scheduled.some((s) => s.q.key === q.key && s.q.form === 'missing')) {
+        this.scheduled.push({ at: this.answered + 3, q: asMissing(question(f, 'retry', 'practice', this.rng), this.rng, false) });
+      }
+    } else if (!correct) {
       // Show the answer, then come back to it twice so it ends on a success.
       this.scheduled = this.scheduled.filter((s) => !(s.q.key === q.key && s.q.kind === 'retry'));
       this.schedule(f, 'retry', 2);

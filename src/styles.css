@@ -1335,3 +1335,23 @@ table.simple th {
   min-height: 1.3em;
   text-align: center;
 }
+
+/* ---------------------------------------------------------------- missing-number questions (? × 7 = 56) */
+.answer-box {
+  display: inline-block;
+}
+
+.question-missing {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  font-size: clamp(2.3rem, 11.5vw, 4rem);
+}
+
+.question-missing .answer-box {
+  font-size: 1em;
+  min-width: 1.5ch;
+  min-height: 1.2em;
+  line-height: 1.15;
+  padding: 0 0.15em;
+}

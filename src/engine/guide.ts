@@ -19,7 +19,9 @@ export type Expr =
   | { op: 'times'; x: number; y: number; /** The factor that was swapped in (for the swap animation). */ from?: { pos: 'x' | 'y'; value: number } }
   | { op: 'plus'; x: number; y: number }
   | { op: 'minus'; x: number; y: number }
-  | { op: 'half'; x: number };
+  | { op: 'half'; x: number }
+  /** "? × 7 = 56": `known` is the factor shown, `pos` is where the gap is. */
+  | { op: 'gap'; pos: 'x' | 'y'; known: number; p: number };
 
 export interface GuideStep {
   /** i18n key under `guide.` and its variables. */
@@ -44,7 +46,9 @@ export type GuideKind =
   | 'tenPlusTwo'
   | 'doubleThreeTimes'
   | 'fivePlusOne'
-  | 'fivePlusTwo';
+  | 'fivePlusTwo'
+  | 'missingIntro'
+  | 'missingSearch';
 
 export interface Guide {
   kind: GuideKind;
@@ -64,6 +68,8 @@ export function evaluate(e: Expr): number {
       return e.x - e.y;
     case 'half':
       return e.x / 2;
+    case 'gap':
+      return e.p / e.known;
   }
 }
 
@@ -199,6 +205,67 @@ export function guideFor(a: number, b: number): Guide {
     }
   }
   return { kind, a, b, steps };
+}
+
+/** Starting points for finding a hidden factor: easy facts to count on or back from. */
+const ANCHORS = [2, 5, 10];
+
+/**
+ * Guides for "? × 7 = 56" (`missing` says which factor of a × b is hidden).
+ *
+ * - `intro` (the very first one): a fact the learner knows, then the same fact with a gap.
+ * - otherwise: start from an easy fact (2, 5 or 10 groups), add or take away one group at a
+ *   time until we reach the product, then count the groups.
+ *
+ * The known factor keeps its place throughout.
+ */
+export function missingGuideFor(a: number, b: number, missing: 'a' | 'b', intro = false): Guide {
+  const known = missing === 'a' ? b : a;
+  const m = missing === 'a' ? a : b;
+  const p = a * b;
+  const pos = missing === 'a' ? 'x' : 'y';
+  const gap: Expr = { op: 'gap', pos, known, p };
+  const times = (k: number): Expr => (pos === 'x' ? { op: 'times', x: k, y: known } : { op: 'times', x: known, y: k });
+  const step = (text: string, vars: Record<string, number>, expr: Expr, b2: Bar): GuideStep => ({
+    text,
+    vars,
+    expr,
+    answer: evaluate(expr),
+    bar: b2,
+  });
+
+  if (intro) {
+    return {
+      kind: 'missingIntro',
+      a,
+      b,
+      steps: [
+        step('missingIntro_1', { a, b }, times(m), bar(known, ['a', m])),
+        { ...step('missingIntro_2', { p, n: known }, gap, bar(known, ['a', m])), note: 'missingTrick' },
+      ],
+    };
+  }
+
+  const anchor = ANCHORS.reduce((best, x) => (Math.abs(x - m) < Math.abs(best - m) ? x : best), 5);
+  const steps: GuideStep[] = [step('missingStart', { n: known, p }, times(anchor), bar(known, ['a', anchor]))];
+  let k = anchor;
+  while (k !== m) {
+    const prev = k * known;
+    if (k < m) {
+      k++;
+      steps.push(step('missingUp', { prev, p, n: known }, { op: 'plus', x: prev, y: known }, bar(known, ['a', k - 1], ['b', 1])));
+    } else {
+      k--;
+      steps.push(
+        step('missingDown', { prev, p, n: known }, { op: 'minus', x: prev, y: known }, bar(known, ['a', k], ['removed', anchor - k])),
+      );
+    }
+  }
+  steps.push({
+    ...step(anchor === m ? 'missingFoundNow' : 'missingFound', { p, n: known }, gap, bar(known, ['a', m])),
+    note: 'missingTrick',
+  });
+  return { kind: 'missingSearch', a, b, steps };
 }
 
 /** The picture of the fact itself: `home` groups of `other`. */

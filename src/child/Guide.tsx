@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { BarModel, ExprView, exprText, NoteView } from '../components/StrategyView';
-import { guideFor } from '../engine/guide';
+import { BarModel, ExprView, exprText, NoteView, solvedText } from '../components/StrategyView';
+import { guideFor, missingGuideFor, type Expr } from '../engine/guide';
 import { t } from '../i18n';
 import { NumberPad } from './NumberPad';
 
@@ -16,6 +16,8 @@ const KICKER: Record<GuideMode, string> = {
  * "Let's work it out together": the method in small steps. Each step asks for one in-between
  * answer; a wrong step shows the right number and asks the learner to type it, so they can't
  * skip through without doing it. `onFinish` gets the learner's first try at the final step.
+ *
+ * With `missing`, the question is "? × 7 = 56" and the final step fills the gap.
  */
 export function Guide({
   a,
@@ -23,14 +25,19 @@ export function Guide({
   mode,
   showBars,
   onFinish,
+  missing,
+  intro = false,
 }: {
   a: number;
   b: number;
   mode: GuideMode;
   showBars: boolean;
   onFinish: (firstFinalTry: number) => void;
+  missing?: 'a' | 'b';
+  /** The very first missing-number question: introduce the idea. */
+  intro?: boolean;
 }) {
-  const guide = useMemo(() => guideFor(a, b), [a, b]);
+  const guide = useMemo(() => (missing ? missingGuideFor(a, b, missing, intro) : guideFor(a, b)), [a, b, missing, intro]);
   const [idx, setIdx] = useState(0);
   const [input, setInput] = useState('');
   const [mustCopy, setMustCopy] = useState(false);
@@ -41,6 +48,8 @@ export function Guide({
   const done = idx >= guide.steps.length;
   const step = guide.steps[Math.min(idx, guide.steps.length - 1)];
   const isFinal = idx === guide.steps.length - 1;
+  const last = guide.steps[guide.steps.length - 1];
+  const target = missing === 'a' ? a : missing === 'b' ? b : a * b;
 
   useEffect(() => {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: 'smooth' });
@@ -85,23 +94,31 @@ export function Guide({
       if (/^\d$/.test(e.key)) press(e.key);
       else if (e.key === 'Backspace') press('back');
       else if (e.key === 'Enter') {
-        if (done) onFinish(firstFinalTry.current ?? a * b);
+        if (done) onFinish(firstFinalTry.current ?? target);
         else press('enter');
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [a, b, done, onFinish, press]);
+  }, [done, onFinish, press, target]);
 
-  const last = guide.steps[guide.steps.length - 1];
+  const box = <span className={`guide-input${flash ? ' good' : ''}`}>{input || (flash ? step.answer : '?')}</span>;
+  // Until it's worked out, a missing-number question shows its gap, never the hidden number.
+  // (In the introduction the first step asks for the product, so the puzzle waits until step 2.)
+  const heading = missing
+    ? done
+      ? solvedText(last.expr, last.answer)
+      : intro && idx === 0
+        ? ''
+        : exprText(last.expr)
+    : `${a} × ${b}${done ? ` = ${a * b}` : ''}`;
 
   return (
     <div className="guide">
       <div className="guide-head">
-        <p className="kicker">{t(KICKER[mode])}</p>
-        <p className="guide-fact num">
-          {a} × {b}
-          {done ? ` = ${a * b}` : ''}
+        <p className="kicker">{t(missing && mode === 'new' ? 'guide.kickerMissing' : KICKER[mode])}</p>
+        <p className="guide-fact num" dir="ltr">
+          {heading}
         </p>
       </div>
 
@@ -112,8 +129,8 @@ export function Guide({
             {guide.steps.map((s, i) => (
               <li key={i} className="done">
                 <span className="muted">{t(`guide.${s.text}`, s.vars)}</span>
-                <strong className="num">
-                  ✓ {exprText(s.expr)} = {s.answer}
+                <strong className="num" dir="ltr">
+                  ✓ {solvedText(s.expr, s.answer)}
                 </strong>
               </li>
             ))}
@@ -121,10 +138,10 @@ export function Guide({
         ) : (
           // While working, finished steps shrink to their sums so the current step has room.
           idx > 0 && (
-            <div className="guide-done-row">
+            <div className="guide-done-row" dir="ltr">
               {guide.steps.slice(0, idx).map((s, i) => (
                 <span key={i} className="pill good num">
-                  ✓ {exprText(s.expr)} = {s.answer}
+                  ✓ {solvedText(s.expr, s.answer)}
                 </span>
               ))}
             </div>
@@ -135,12 +152,17 @@ export function Guide({
           <div className="guide-step">
             <p className="guide-text">{t(`guide.${step.text}`, step.vars)}</p>
             {showBars && <BarModel bar={step.bar} />}
-            <p className="guide-expr num" data-expr={exprText(step.expr)}>
-              <span key={idx}>
-                <ExprView expr={step.expr} />
-              </span>{' '}
-              ={' '}
-              <span className={`guide-input${flash ? ' good' : ''}`}>{input || (flash ? step.answer : '?')}</span>
+            <p className="guide-expr num" data-expr={exprText(step.expr)} dir="ltr">
+              {step.expr.op === 'gap' ? (
+                <GapExpr expr={step.expr} box={box} />
+              ) : (
+                <>
+                  <span key={idx}>
+                    <ExprView expr={step.expr} />
+                  </span>{' '}
+                  = {box}
+                </>
+              )}
             </p>
             {/* A final-step trick would give the answer away, so it waits until the end. */}
             {step.note && !isFinal && <p className="guide-note">{t(`guide.${step.note}`, step.vars)}</p>}
@@ -154,19 +176,33 @@ export function Guide({
 
         {done && (
           <div className="guide-step">
-            {showBars && <BarModel bar={last.bar} />}
-            {last.note && <NoteView note={last.note} a={a} b={b} vars={last.vars} />}
+            {/* A missing-number guide ends with its short, which needs the room. */}
+            {showBars && !missing && <BarModel bar={last.bar} />}
+            {last.note && <NoteView note={last.note} a={a} b={b} vars={last.vars} missing={missing} />}
           </div>
         )}
       </div>
 
       {done ? (
-        <button className="btn btn-primary btn-big" onClick={() => onFinish(firstFinalTry.current ?? a * b)} autoFocus>
+        <button className="btn btn-primary btn-big" onClick={() => onFinish(firstFinalTry.current ?? target)} autoFocus>
           {mode === 'mistake' ? t('common.gotIt') : t('guide.doneButton')}
         </button>
       ) : (
         <NumberPad onPress={press} disabled={flash} canSubmit={input.length > 0} compact />
       )}
     </div>
+  );
+}
+
+/** "? × 7 = 56" with the learner's input in the gap. */
+function GapExpr({ expr, box }: { expr: Extract<Expr, { op: 'gap' }>; box: React.ReactNode }) {
+  return expr.pos === 'x' ? (
+    <>
+      {box} × {expr.known} = {expr.p}
+    </>
+  ) : (
+    <>
+      {expr.known} × {box} = {expr.p}
+    </>
   );
 }

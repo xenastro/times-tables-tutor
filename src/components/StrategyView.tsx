@@ -44,7 +44,15 @@ export function exprText(e: Expr): string {
       return `${e.x} − ${e.y}`;
     case 'half':
       return `${t('guide.half')} ${e.x}`;
+    case 'gap':
+      return e.pos === 'x' ? `? × ${e.known} = ${e.p}` : `${e.known} × ? = ${e.p}`;
   }
+}
+
+/** A finished step as a sum: "10 × 3 = 30", or the filled gap "8 × 7 = 56". */
+export function solvedText(e: Expr, answer: number): string {
+  if (e.op === 'gap') return e.pos === 'x' ? `${answer} × ${e.known} = ${e.p}` : `${e.known} × ${answer} = ${e.p}`;
+  return `${exprText(e)} = ${answer}`;
 }
 
 /** An expression; a swapped factor visibly flips from the old number to the new one. */
@@ -66,8 +74,20 @@ export function ExprView({ expr }: { expr: Expr }) {
 }
 
 /** A closing memory tip: an animated short when there is one, otherwise a line of text. */
-export function NoteView({ note, a, b, vars }: { note: string; a: number; b: number; vars: Record<string, number> }) {
-  const show = trickFor(note, a, b);
+export function NoteView({
+  note,
+  a,
+  b,
+  vars,
+  missing,
+}: {
+  note: string;
+  a: number;
+  b: number;
+  vars: Record<string, number>;
+  missing?: 'a' | 'b';
+}) {
+  const show = trickFor(note, a, b, missing);
   if (show) return <TrickShow show={show} />;
   return <p className="guide-note">{t(`guide.${note}`, vars)}</p>;
 }
@@ -82,9 +102,7 @@ export function GuideSteps({ a, b, showBar = true }: { a: number; b: number; sho
         {g.steps.map((s, i) => (
           <li key={i}>
             <span className="muted">{t(`guide.${s.text}`, s.vars)}</span>
-            <strong className="num">
-              {exprText(s.expr)} = {s.answer}
-            </strong>
+            <strong className="num">{solvedText(s.expr, s.answer)}</strong>
           </li>
         ))}
       </ol>

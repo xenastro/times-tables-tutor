@@ -180,6 +180,10 @@
     "danger": "Remove child",
     "deleteChild": "Delete {name} and all their progress",
     "deleteConfirm": "Type DELETE to confirm",
+    "missingTitle": "Missing-number puzzles",
+    "missingNote": "Like ? × 7 = 56, a first step into division. They start once facts are fluent, and don't change the fact map.",
+    "missingStats": "{n} answered · {pct}% right",
+    "missingNone": "None yet.",
     "factDetail": "{a} × {b} = {p}",
     "attempts": "{n} answers",
     "noAttempts": "Not practised yet",
@@ -220,7 +224,16 @@
     "fivePlusTwo_1": "Times 7 is times 5 plus times 2. First, swap the 7 for a 5:",
     "fivePlusTwo_2": "Now times 2: double {n}:",
     "fivePlusTwo_3": "Add the two parts together:",
-    "final": "Put it together:"
+    "final": "Put it together:",
+    "kickerMissing": "A new kind of puzzle",
+    "missingIntro_1": "Here's a new kind of puzzle. First, a fact you know:",
+    "missingIntro_2": "Now one number is hiding. Which number goes in the gap to make {p}?",
+    "missingStart": "Which number times {n} makes {p}? Start with an easy one:",
+    "missingUp": "{prev} is less than {p}. Add one more {n}:",
+    "missingDown": "{prev} is more than {p}. Take away one {n}:",
+    "missingFound": "We made {p}! How many {n}s did that take?",
+    "missingFoundNow": "That's {p} straight away! So which number goes in the gap?",
+    "missingTrick": "So {p} ÷ {n} = {m}."
   },
   "trick": {
     "78": {
@@ -243,6 +256,13 @@
       "again": "…and copy it again!",
       "done": "So {a} × {b} = {p}",
       "summary": "11 × {n}: write {n} twice to get {p}."
+    },
+    "missing": {
+      "hide": "Hide the {m}…",
+      "puzzle": "…and you get a missing-number puzzle!",
+      "back": "The {m} fills the gap.",
+      "divide": "Turn it around: {p} ÷ {n} = {m}. That's division!",
+      "summary": "{m} × {n} = {p}, so {p} ÷ {n} = {m}."
     },
     "nine": {
       "less": "The answer starts with {tens}, one less than {n}.",
