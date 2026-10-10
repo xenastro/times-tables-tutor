@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NumberWordsShow } from '../components/NumberWordsShow';
-import { useArabicVoice } from './arabicVoice';
+import { playArabic } from './arabicVoice';
 import { FactMap, Legend } from '../components/FactMap';
 import { Sheet } from '../components/FactSheet';
 import { GuideSteps } from '../components/StrategyView';
@@ -49,9 +49,8 @@ export function MapScreen() {
 /** "Say it in Arabic": the units-first reading of the answer. */
 function WordsToggle({ n }: { n: number }) {
   const [open, setOpen] = useState(false);
-  const arabic = useArabicVoice();
   return open ? (
-    <NumberWordsShow n={n} say={arabic.say} />
+    <NumberWordsShow n={n} say={(clips) => playArabic(clips)} />
   ) : (
     <button className="btn btn-soft" onClick={() => setOpen(true)}>
       🗣️ {t('words.button')}

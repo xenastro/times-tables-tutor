@@ -28,6 +28,14 @@ export default defineConfig({
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],
         globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest}'],
+        // The Arabic voice clips are kept once fetched (not all up front: most learners need few or none).
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith('/voice/'),
+            handler: 'CacheFirst',
+            options: { cacheName: 'voice', expiration: { maxEntries: 1500 } },
+          },
+        ],
       },
     }),
   ],

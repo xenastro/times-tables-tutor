@@ -30,6 +30,13 @@ function fakeArabicSpeech() {
   };
 }
 
+/** Records which Arabic clips the app plays. */
+function recordClips() {
+  const w = window as unknown as { __clips: string[] };
+  w.__clips = [];
+  window.addEventListener('app:arabic-say', (e) => w.__clips.push(...(e as CustomEvent<string[]>).detail));
+}
+
 const EASTERN = /[٠-٩]/;
 
 /** Answers whatever practice shows, correctly, until `until` is true (or a guard runs out). */
@@ -106,16 +113,19 @@ test('bilingual mode: the question in Arabic words, the answer in digits', async
   await seedFluentCheckup(request, learner.id);
   const page = await linkPhone(browser, request, learner, { viewport: { width: W, height: H } });
   await page.addInitScript(fakeArabicSpeech);
+  await page.addInitScript(recordClips);
   await page.reload();
   await page.getByRole('button', { name: "Start today's practice" }).click();
   await expect(page.locator('.question-words')).toBeVisible();
   const q = await readQuestion(page);
   await expect(page.locator('.question-words')).toContainText('ضرب');
   await page.screenshot({ path: `${SHOTS}/bi-question.png` });
-  // Heard in Arabic, through the phone's Arabic voice.
-  await expect
-    .poll(() => page.evaluate(() => (window as unknown as { __spoken: { lang: string }[] }).__spoken.map((s) => s.lang)))
-    .toContain('ar-SA');
+  // Heard in Arabic from the recorded clip that ships with the app, never the phone's own voice.
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __clips: string[] }).__clips)).toContain(`t${q.a}x${q.b}`);
+  expect(await page.evaluate(() => (window as unknown as { __spoken: unknown[] }).__spoken)).toEqual([]);
+  const clip = await request.get(`/voice/ar/amal1/t${q.a}x${q.b}.mp3`);
+  expect(clip.status()).toBe(200);
+  expect(clip.headers()['content-type']).toContain('audio/mpeg');
   await tapNumber(page, q.expected);
   await expect(page.locator('.answer-words')).not.toHaveText('');
   await page.screenshot({ path: `${SHOTS}/bi-answer.png` });

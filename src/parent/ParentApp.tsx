@@ -6,7 +6,6 @@ import { Auth } from './Auth';
 import { ChildDetail } from './ChildDetail';
 import { ChildrenList } from './ChildrenList';
 import { DeleteAccount, ResetPassword } from './ResetPassword';
-import { VoiceRecorder } from './VoiceRecorder';
 
 export function ParentApp({ path }: { path: string }) {
   const [email, setEmail] = useState<string | null | undefined>(undefined);
@@ -56,7 +55,6 @@ export function ParentApp({ path }: { path: string }) {
           </header>
           <p className="muted small">{email}</p>
           <ChildrenList />
-          <VoiceRecorder />
           <DeleteAccount />
           <button className="link" style={{ alignSelf: 'center' }} onClick={() => navigate('/privacy')}>
             {t('privacy.link')}

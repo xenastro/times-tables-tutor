@@ -75,37 +75,6 @@ export function arabicWords(n: number): string {
     .join(' ');
 }
 
-/* ------------------------------------------------------------------ recorded clips */
-
-/**
- * The words a parent records so the app can say any answer up to 144 in their voice:
- * 1–19 (teens are whole words), the tens 20–90, مئة, و ("and") and ضرب ("times"). 30 short clips.
- */
-export const ARABIC_CLIPS: string[] = [
-  ...Array.from({ length: 19 }, (_, i) => String(i + 1)),
-  ...[20, 30, 40, 50, 60, 70, 80, 90].map(String),
-  '100',
-  'and',
-  'times',
-];
-
-/** What each clip says, for the recording screen. */
-export function clipWord(clip: string): string {
-  if (clip === 'and') return AND;
-  if (clip === 'times') return 'ضرب';
-  return arabicWords(Number(clip));
-}
-
-/** The clips that say `n`, in order: 56 → 6, و, 50 (ستة وخمسون). */
-export function arabicClips(n: number): string[] {
-  if (!Number.isInteger(n) || n < 1 || n > 199) throw new Error(`unsupported number ${n}`);
-  if (n >= 100) return n === 100 ? ['100'] : ['100', 'and', ...arabicClips(n - 100)];
-  if (n < 20) return [String(n)];
-  const u = n % 10;
-  const tens = String(n - u);
-  return u ? [String(u), 'and', tens] : [tens];
-}
-
 /** "سبعة ضرب ثمانية": how a times-table question is read aloud. */
 export function arabicQuestion(a: number, b: number): string {
   return `${arabicWords(a)} ضرب ${arabicWords(b)}`;

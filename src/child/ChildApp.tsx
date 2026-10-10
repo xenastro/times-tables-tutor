@@ -10,6 +10,7 @@ import { LessonScreen } from './LessonScreen';
 import { Pairs } from './Pairs';
 import { Practice } from './Practice';
 import { RowGameScreen } from './RowGame';
+import { prefetchArabic } from './arabicVoice';
 import { ReadAloudProvider } from './ReadAloud';
 import { Welcome } from './Welcome';
 
@@ -46,9 +47,15 @@ function Screens({ path }: { path: string }) {
     document.documentElement.dataset.accent = learner.theme;
   }, [learner.theme]);
 
+  // Arabic is spoken from recorded clips: fetch the ones this learner needs while online.
+  useEffect(() => {
+    if (settings.language === 'ar') prefetchArabic(true);
+    else if (settings.bilingual) prefetchArabic(false);
+  }, [settings.language, settings.bilingual]);
+
   if (!loaded) return <main className="screen"><p className="muted">{t('common.loading')}</p></main>;
   return (
-    <ReadAloudProvider enabled={settings.readAloud} lang={settings.language}>
+    <ReadAloudProvider learnerId={learner.id} defaultOn={settings.readAloud || settings.bilingual} lang={settings.language}>
       <Screen path={path} />
     </ReadAloudProvider>
   );

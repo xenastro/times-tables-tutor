@@ -102,16 +102,6 @@ export function SettingsPanel({ learner, onSaved }: { learner: LearnerDTO; onSav
         ]}
       />
       <Choice
-        label={t('parent.readAloud')}
-        value={s.readAloud ? 'on' : 'off'}
-        onChange={(v) => set('readAloud', v === 'on')}
-        note={t('parent.readAloudNote')}
-        options={[
-          { value: 'on', label: t('parent.on') },
-          { value: 'off', label: t('parent.off') },
-        ]}
-      />
-      <Choice
         label={t('parent.language')}
         value={s.language}
         onChange={(v) => set('language', v)}

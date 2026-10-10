@@ -51,10 +51,5 @@ export const EVENT_TYPES: EventType[] = [
   'lesson_done',
 ];
 
-export interface AudioClipDTO {
-  clip: string;
-  updatedAt: number;
-}
-
 export const AVATARS =['🦊', '🐼', '🦉', '🐙', '🐢', '🦄', '🐧', '🦁', '🚀', '🌙', '⚡', '🎧'];
 export const THEMES = ['teal', 'violet', 'coral', 'blue', 'green', 'amber'] as const;

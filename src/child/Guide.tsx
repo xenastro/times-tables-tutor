@@ -3,6 +3,7 @@ import { BarModel, ExprView, exprText, NoteView, solvedText } from '../component
 import { guideFor, missingGuideFor, type Expr } from '../engine/guide';
 import { currentLanguage, n, t, tIn } from '../i18n';
 import { NumberPad } from './NumberPad';
+import { exprKey, numberKey } from '../engine/arabicSpeech';
 import { SayAgain, spokenExpr, stopSpeaking, useReadAloud } from './ReadAloud';
 
 export type GuideMode = 'new' | 'hint' | 'mistake';
@@ -60,10 +61,11 @@ export function Guide({
   const { say } = useReadAloud();
   const stepSpeech = done ? '' : `${tIn(currentLanguage(), `guide.${step.text}`, step.vars)} ${spokenExpr(step.expr)}`;
   useEffect(() => {
-    if (stepSpeech) say(stepSpeech);
+    if (stepSpeech) say(stepSpeech, undefined, exprKey(step.expr));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [say, stepSpeech]);
   useEffect(() => {
-    if (mustCopy) say(t('guide.wrong', { v: step.answer }));
+    if (mustCopy) say(t('guide.wrong', { v: step.answer }), undefined, numberKey(step.answer));
   }, [mustCopy, say, step.answer]);
   useEffect(() => () => stopSpeaking(), []);
 
@@ -130,7 +132,7 @@ export function Guide({
       <div className="guide-head">
         <p className="kicker">
           {t(missing && mode === 'new' ? 'guide.kickerMissing' : KICKER[mode])}
-          {stepSpeech && <SayAgain text={stepSpeech} className="icon-btn icon-btn-sm" />}
+          {stepSpeech && <SayAgain text={stepSpeech} clip={exprKey(step.expr)} className="icon-btn icon-btn-sm" />}
         </p>
         <p className="guide-fact num" dir="ltr">
           {heading}

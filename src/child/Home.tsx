@@ -7,6 +7,7 @@ import { dayKey, practisedToday } from '../engine/stats';
 import { n, t } from '../i18n';
 import { navigate } from '../router';
 import { useLearner } from './LearnerContext';
+import { SoundToggle } from './ReadAloud';
 
 export function Home() {
   const { learner, state, events, syncStatus, settings } = useLearner();
@@ -59,6 +60,7 @@ export function Home() {
           </button>
           <h1 style={{ fontSize: '1.4rem' }}>{t('home.hi', { name: learner.displayName })}</h1>
         </div>
+        <SoundToggle />
       </header>
 
       {needRefresh && (

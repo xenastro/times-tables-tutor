@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
-import { arabicClips, arabicParts, arabicWords } from '../engine/arabic';
+import { arabicParts, arabicWords } from '../engine/arabic';
+import { numberKey } from '../engine/arabicSpeech';
 import { n as num, t } from '../i18n';
 import { PLAYBACK_SLOWDOWN, PlaybackButton, usePlayback } from './Playback';
 
@@ -7,7 +8,7 @@ import { PLAYBACK_SLOWDOWN, PlaybackButton, usePlayback } from './Playback';
  * "56 is ستة وخمسون": the digits light up in the order Arabic says them (the ones first,
  * then the tens; hundreds come before both), and each word appears as its digit lights.
  */
-export function NumberWordsShow({ n, say }: { n: number; say?: (clips: string[], text: string) => void }) {
+export function NumberWordsShow({ n, say }: { n: number; say?: (clips: string[]) => void }) {
   const parts = useMemo(() => arabicParts(n), [n]);
   const words = arabicWords(n);
   const digits = String(n).split('');
@@ -18,7 +19,7 @@ export function NumberWordsShow({ n, say }: { n: number; say?: (clips: string[],
 
   // The whole reading is said aloud each time the short reaches the end.
   useEffect(() => {
-    if (finished) say?.(arabicClips(n), words);
+    if (finished) say?.([numberKey(n)]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [finished]);
 

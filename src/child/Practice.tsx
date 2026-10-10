@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BarModel } from '../components/StrategyView';
 import { NumberWordsShow } from '../components/NumberWordsShow';
 import { TurnaroundShow } from '../components/TurnaroundShow';
-import { arabicClips, arabicQuestion, arabicWords } from '../engine/arabic';
+import { arabicQuestion, arabicWords } from '../engine/arabic';
+import { numberKey, questionKey } from '../engine/arabicSpeech';
 import { factBar } from '../engine/guide';
 import { FLUENT_LEVEL } from '../engine/mastery';
 import { CheckupSession, expectedAnswer, PracticeSession, type Question } from '../engine/session';
@@ -10,11 +11,11 @@ import { isProductAnswer, type AnswerPayload } from '../engine/types';
 import { newId } from '../data/api';
 import { n, t } from '../i18n';
 import { navigate } from '../router';
-import { questionClips, stopArabic, useArabicVoice } from './arabicVoice';
+import { playArabic, stopArabic } from './arabicVoice';
 import { Guide, type GuideMode } from './Guide';
 import { useLearner } from './LearnerContext';
 import { NumberPad } from './NumberPad';
-import { SayAgain, spokenQuestion, stopSpeaking, useReadAloud } from './ReadAloud';
+import { SayAgain, SoundToggle, spokenQuestion, stopSpeaking, useReadAloud } from './ReadAloud';
 import { Summary } from './Summary';
 
 type Phase =
@@ -37,8 +38,7 @@ const HARD_KINDS = ['new', 'learning', 'retry', 'repeat'];
 
 export function Practice() {
   const { state, settings, addEvents, events } = useLearner();
-  const { say } = useReadAloud();
-  const arabic = useArabicVoice();
+  const { say, sayArabic } = useReadAloud();
 
   // Snapshot what the learner knew at the start, for the summary.
   const [startState] = useState(state);
@@ -150,11 +150,11 @@ export function Practice() {
   inputRef.current = input;
   const sayQuestion = useCallback(
     (q: Question, onEnd?: () => void) => {
-      if (isBilingual(q)) arabic.say(questionClips(q.a, q.b), arabicQuestion(q.a, q.b), onEnd);
-      else say(spokenQuestion(q), onEnd);
+      if (isBilingual(q)) sayArabic([questionKey(q)], onEnd);
+      else say(spokenQuestion(q), onEnd, questionKey(q));
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [arabic.say, say, settings.bilingual],
+    [sayArabic, say, settings.bilingual],
   );
   useEffect(() => {
     if (!askedQ) return;
@@ -203,7 +203,7 @@ export function Practice() {
         // Hear and see the answer in Arabic words. The first time, show how Arabic says numbers.
         const p = q.a * q.b;
         setPhase({ kind: 'feedback', q, given, correct: true });
-        arabic.say(arabicClips(p), arabicWords(p));
+        sayArabic([numberKey(p)]);
         const tip = !unitsTipShown.current && p > 20 && p % 10 !== 0;
         window.setTimeout(() => {
           if (!tip) return advance();
@@ -328,7 +328,10 @@ export function Practice() {
         >
           <div style={{ width: `${progress * 100}%` }} />
         </div>
-        {(phase.kind === 'ask' || phase.kind === 'feedback') && <SayAgain text={spokenQuestion(phase.q)} />}
+        {(phase.kind === 'ask' || phase.kind === 'feedback') && (
+          <SayAgain text={spokenQuestion(phase.q)} clip={questionKey(phase.q)} arabic={isBilingual(phase.q)} />
+        )}
+        <SoundToggle />
       </div>
 
       {phase.kind === 'intro' && (
@@ -382,7 +385,7 @@ export function Practice() {
         <div className="panel">
           <p className="kicker">{t('bilingual.kicker')}</p>
           <p className="muted">{t('bilingual.intro')}</p>
-          <NumberWordsShow n={phase.q.a * phase.q.b} say={arabic.say} />
+          <NumberWordsShow n={phase.q.a * phase.q.b} say={sayArabic} />
           <button className="btn btn-primary btn-big" onClick={advance}>
             {t('common.gotIt')}
           </button>
@@ -433,11 +436,9 @@ export function Practice() {
                 >
                   {arabicQuestion(phase.q.a, phase.q.b)}
                 </div>
-                {arabic.available && (
-                  <button className="btn btn-soft" onClick={() => sayQuestion(phase.q)}>
-                    🔊 {t('bilingual.listen')}
-                  </button>
-                )}
+                <button className="btn btn-soft" onClick={() => playArabic([questionKey(phase.q)])}>
+                  🔊 {t('bilingual.listen')}
+                </button>
                 {answerBox}
                 <p className="answer-words" dir="rtl" lang="ar">
                   {phase.kind === 'feedback' && phase.correct ? arabicWords(phase.q.a * phase.q.b) : ''}

@@ -4,7 +4,8 @@ import { newId } from '../data/api';
 import { n, t } from '../i18n';
 import { goBack, navigate } from '../router';
 import { useLearner } from './LearnerContext';
-import { spokenExpr, useReadAloud } from './ReadAloud';
+import { numberKey, timesKey } from '../engine/arabicSpeech';
+import { SoundToggle, spokenExpr, useReadAloud } from './ReadAloud';
 
 /**
  * "Find the pairs": tap a fact, then its answer. All cards face up, no timer, nothing to lose.
@@ -58,7 +59,8 @@ export function Pairs() {
 
   function tap(card: PairCard) {
     if (matched.has(card.pair) || nope.length) return;
-    say(card.kind === 'fact' ? spokenExpr({ op: 'times', x: card.a, y: card.b }) : String(card.p));
+    if (card.kind === 'fact') say(spokenExpr({ op: 'times', x: card.a, y: card.b }), undefined, timesKey(card.a, card.b));
+    else say(String(card.p), undefined, numberKey(card.p));
     const first = cards.find((c) => c.id === selected);
     // Nothing chosen yet, the same card again, or two of the same kind: (re)choose this one.
     if (!first || first.id === card.id || first.kind === card.kind) {
@@ -99,7 +101,8 @@ export function Pairs() {
         >
           <span className="flip-rtl">←</span>
         </button>
-        <h1 style={{ fontSize: '1.4rem' }}>{t('games.pairsTitle')}</h1>
+        <h1 className="grow" style={{ fontSize: '1.4rem' }}>{t('games.pairsTitle')}</h1>
+        <SoundToggle />
       </header>
       <p className="muted">{done ? t('games.pairsDone') : t('games.pairsHow')}</p>
 

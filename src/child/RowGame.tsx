@@ -6,7 +6,8 @@ import { goBack, navigate } from '../router';
 import { Guide } from './Guide';
 import { useLearner } from './LearnerContext';
 import { NumberPad } from './NumberPad';
-import { SayAgain, spokenExpr, useReadAloud } from './ReadAloud';
+import { timesKey } from '../engine/arabicSpeech';
+import { SayAgain, SoundToggle, spokenExpr, useReadAloud } from './ReadAloud';
 
 /** "Fill a row": pick a row of the map, then fill every cell. A miss comes back later; nothing is lost. */
 export function RowGameScreen() {
@@ -96,7 +97,7 @@ function RowPlay({ table, onAnother }: { table: number; onAnother: () => void })
   // Read each question aloud.
   const asking = phase.kind === 'ask' && q ? `${q.a}x${q.b}-${game.answered}` : null;
   useEffect(() => {
-    if (asking && q) say(spokenExpr({ op: 'times', x: q.a, y: q.b }));
+    if (asking && q) say(spokenExpr({ op: 'times', x: q.a, y: q.b }), undefined, timesKey(q.a, q.b));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [asking]);
 
@@ -201,7 +202,8 @@ function RowPlay({ table, onAnother }: { table: number; onAnother: () => void })
         <h1 className="grow" style={{ fontSize: '1.2rem' }}>
           {t('games.rowPlaying', { n: table })}
         </h1>
-        {phase.kind === 'ask' && q && <SayAgain text={spokenExpr({ op: 'times', x: q.a, y: q.b })} />}
+        {phase.kind === 'ask' && q && <SayAgain text={spokenExpr({ op: 'times', x: q.a, y: q.b })} clip={timesKey(q.a, q.b)} />}
+        <SoundToggle />
       </div>
       {tiles}
 

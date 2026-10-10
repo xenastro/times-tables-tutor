@@ -8,3 +8,5 @@ dev-dist/
 e2e-results/
 .claude/
 PRODUCTION_INVITE_CODE.txt
+AZURE_SPEECH.txt
+voice-check.txt

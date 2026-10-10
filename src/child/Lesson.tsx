@@ -4,7 +4,8 @@ import { ExprView, exprText } from '../components/StrategyView';
 import { lessonFor, type LessonId } from '../engine/lessons';
 import { currentLanguage, n, t, tIn } from '../i18n';
 import { NumberPad } from './NumberPad';
-import { SayAgain, spokenExpr, stopSpeaking, useReadAloud } from './ReadAloud';
+import { exprKey, numberKey } from '../engine/arabicSpeech';
+import { SayAgain, SoundToggle, spokenExpr, stopSpeaking, useReadAloud } from './ReadAloud';
 
 /**
  * One "Understand" lesson: a picture that grows a group, row or jump at a time, and one number
@@ -21,8 +22,10 @@ export function Lesson({ id, onExit, onDone }: { id: LessonId; onExit: () => voi
   const { say } = useReadAloud();
 
   const speech = `${tIn(currentLanguage(), `lesson.${step.text}`, step.vars)} ${step.expr ? spokenExpr(step.expr) : ''}`;
+  const clip = step.expr ? exprKey(step.expr) : undefined;
   useEffect(() => {
-    say(speech);
+    say(speech, undefined, clip);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [say, speech]);
   useEffect(() => () => stopSpeaking(), []);
 
@@ -40,7 +43,8 @@ export function Lesson({ id, onExit, onDone }: { id: LessonId; onExit: () => voi
       } else {
         setInput('');
         setMisses((m) => m + 1);
-        say(misses === 0 ? t('lesson.countAgain') : t('guide.wrong', { v: step.answer }));
+        if (misses === 0) say(t('lesson.countAgain'));
+        else say(t('guide.wrong', { v: step.answer }), undefined, numberKey(step.answer));
       }
     },
     [idx, lesson.steps.length, misses, onDone, say, step.answer],
@@ -82,7 +86,8 @@ export function Lesson({ id, onExit, onDone }: { id: LessonId; onExit: () => voi
         <div className="progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round((idx / lesson.steps.length) * 100)}>
           <div style={{ width: `${(idx / lesson.steps.length) * 100}%` }} />
         </div>
-        <SayAgain text={speech} />
+        <SayAgain text={speech} clip={clip} />
+        <SoundToggle />
       </div>
       <div className="guide">
         <div className="guide-head">

@@ -190,19 +190,7 @@
     "langSwitch": "العربية",
     "numerals": "Numbers",
     "bilingual": "Bilingual mode",
-    "bilingualNote": "Each practice question is shown and read in Arabic words (سبعة ضرب ثمانية), and your child answers in digits. It uses your recordings below when they're complete, otherwise the phone's Arabic voice if it has one; with neither, the words are still shown.",
-    "voiceTitle": "Your voice",
-    "voiceNote": "Record the Arabic number words in your own voice, one short clip each. Bilingual mode plays them instead of the phone's voice. The clips are stored with your account and shared only with your children's phones.",
-    "voiceRecord": "Record",
-    "voiceStop": "Stop",
-    "voicePlay": "Play",
-    "voiceDelete": "Delete",
-    "voiceProgress": "{n} of {total} recorded",
-    "voiceNoMic": "This browser can't record audio. Try Chrome on your phone.",
-    "voiceAnd": "and",
-    "voiceTimes": "times",
-    "readAloud": "Read aloud",
-    "readAloudNote": "Questions and steps are read out with the phone's own voice. If the phone has no voice installed, nothing is read and everything still works.",
+    "bilingualNote": "Each practice question is shown and read in Arabic words (سبعة ضرب ثمانية), and your child answers in digits. The Arabic voice comes with the app, so it sounds the same on every phone. Your child can turn sound off with the 🔊 button.",
     "on": "On",
     "off": "Off",
     "pace": "What counts as “fast”",
@@ -404,7 +392,7 @@
   },
   "account": {
     "delete": "Delete my account",
-    "deleteNote": "This deletes your account, every child on it, all their practice, linked phones and your voice recordings, straight away. It cannot be undone.",
+    "deleteNote": "This deletes your account, every child on it, all their practice and linked phones, straight away. It cannot be undone.",
     "deleteButton": "Delete everything",
     "deleted": "Your account and all its data have been deleted."
   },
@@ -415,9 +403,9 @@
     "whoTitle": "Who runs it",
     "who": "A parent built it for their own children and shares it with a few families by invitation. There are no ads, and nothing is sold.",
     "storedTitle": "What we keep",
-    "stored": "For parents: your email and a scrambled (hashed) password. For each child: the first name or nickname you enter, an optional birth year, the avatar, colour and settings, and their practice: each answer, how long it took, hints, lessons and the optional “how did that feel?” taps. For linked phones: the browser's short device description and when it was last used. If you record your voice: those clips.",
+    "stored": "For parents: your email and a scrambled (hashed) password. For each child: the first name or nickname you enter, an optional birth year, the avatar, colour and settings, and their practice: each answer, how long it took, hints, lessons and the optional “how did that feel?” taps. For linked phones: the browser's short device description and when it was last used.",
     "notStoredTitle": "What we don't do",
-    "notStored": "Children have no accounts, emails or passwords. There are no analytics, no trackers, no third-party scripts and no advertising. The only cookie is the parent sign-in cookie. Read-aloud uses the phone's own built-in voice.",
+    "notStored": "Children have no accounts, emails or passwords. There are no analytics, no trackers, no third-party scripts and no advertising. The only cookie is the parent sign-in cookie. English read-aloud uses the phone's own built-in voice; the Arabic voice is recorded and comes with the app. Nothing your child says is recorded.",
     "phoneTitle": "On the phone",
     "phone": "Practice is saved on the phone first, so it works offline, then copied to our server. Unlinking a phone clears its copy the next time it connects.",
     "whereTitle": "Where it lives",
@@ -427,5 +415,9 @@
     "contactTitle": "Questions",
     "contact": "Ask the person who gave you your invite code.",
     "updated": "Last updated October 2026."
+  },
+  "sound": {
+    "turnOn": "Turn sound on",
+    "turnOff": "Turn sound off"
   }
 }

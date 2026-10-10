@@ -74,12 +74,13 @@ The map starts at **10×10**. Once every 10×10 fact has been started and 80% ar
 ### 4.5 Per-learner settings
 Settings are set by the parent, with defaults by age:
 - range (10 or 12)
-- read-aloud on or off
 - picture hints (always / on mistakes / off)
 - session length
 - fluency threshold offset
 
-Younger profiles default to read-aloud on, pictures always shown, and only ×10, ×2 and ×5.
+Younger profiles default to pictures always shown and only ×10, ×2 and ×5, and start with sound on.
+
+**Sound is the child's choice**, not a setting: a 🔊/🔇 button on the home, practice, lesson and game screens, remembered on that phone (they may be somewhere they can't turn the volume up). Until the child chooses, sound starts on for younger learners and in bilingual mode.
 
 ### 4.6 Explanations: guides, shorts and tips
 - **Guides ("let's work it out together").** Used for a new fact, the hint button and a mistake. The method is split into baby steps and the learner types every in-between answer (5 × 3 → 10 × 3 = 30 → half of 30 = 15). A step can't be skipped: a wrong step shows the right number and the learner types it. A bar model under each step shows the groups being added, taken away or halved.
@@ -92,7 +93,7 @@ Younger profiles default to read-aloud on, pictures always shown, and only ×10,
 
 ### 4.6a Missing numbers, read-aloud and games (1.1)
 - **Missing-number puzzles** (`? × 7 = 56`): a first step into division. Mixed in only for facts at level 3+, taken from the "known" fillers (never a due review), at most 4 a session. The first one ever is an introduction: type a known fact, then fill the same fact's gap; a short then turns it into 56 ÷ 7 = 8. A hint or slip opens a guide that counts on or back from 2, 5 or 10 groups, one typed step at a time. They are counted separately and **never change a fact's level**; there is no picture under the question, since it would let the answer be counted.
-- **Read-aloud** uses the phone's own voice (speechSynthesis): questions and guide steps, plus a 🔊 button. If the phone has no voice, it does nothing. While the question is read, the answer clock waits.
+- **Read-aloud**, when sound is on: questions and guide steps, plus a 🔁 "say it again" button. English uses the phone's own voice (speechSynthesis); if the phone has none, it does nothing. Arabic uses the recorded clips (§4.6c). While the question is read, the answer clock waits.
 - **Games** (after the check-up): *Find the pairs* (match six facts to their answers, all face up) and *Fill a row* (fill one row of the map; a miss comes back later, a second miss opens the guide; the finished row lights up +n at a time). No timers, no losing. Game answers don't change fact levels.
 
 ### 4.6b Understand path (1.2, younger profile)
@@ -102,7 +103,7 @@ Five short lessons come before the check-up: **equal groups** (plates of apples)
 - **Language** (per child: English / العربية) and **digits** (0123 / ٠١٢٣) are separate settings. Arabic turns screens right to left; sums, the number pad and the shorts stay left to right, as in IGCSE textbooks. The parent area has its own language switch.
 - **Number words, units first:** 56 = ستة وخمسون. A short lights the 6, shows ستة, then lights the 5 and shows وخمسون (hundreds come first: مئة وأربعة وأربعون). Shown the first time in bilingual mode, and from the fact map.
 - **Bilingual mode** (per child): practice questions appear and are heard in Arabic words (سبعة ضرب ثمانية); the child answers in digits, then sees and hears the answer's words. 2.5 s extra is allowed before an answer counts as slow. Check-up and missing-number puzzles stay in digits.
-- **The parent's voice:** the parent records 30 short clips (1–19, 20–90, مئة, و, ضرب) on the parent page; together they say any answer up to 144. Stored in D1 (≤64 KB each), cached on the child's phone for offline use. Order of preference: the parent's clips, then the phone's Arabic voice, then words only.
+- **Arabic voice:** every Arabic phrase the app says is a recorded clip that ships with the app (`public/voice/ar/`), so every phone sounds the same and none needs an Arabic voice of its own. 721 clips in one Fus-ha voice (Azure neural TTS, ar-QA Amal), made once by `scripts/make-voice.mjs`: every answer 0–144, all 144 questions, the plus/minus/half steps of the guides and lessons, and the missing-number questions. Grammar: a number on its own or in a sum is nominative (ستة وخمسون); after نصف it is genitive, with the article (نصف الأربعين). Missing-number questions name the result in the nominative (كم ضرب سبعة، والناتج ستة وخمسون؟): after يساوي the voice drifts to the wrong ending whatever the spelling. Neural voices choose case endings from their own guess at the grammar, so the clip maker listens to every clip with a tens word (Azure speech-to-text) and retries other spellings until the ending is right; the few it can't settle are listed for a person to check by ear. Clips are fetched in the background when a child has bilingual mode or Arabic screens, and kept by the service worker for offline use. Arabic guide and lesson sentences are shown, and only their sums are spoken.
 
 ### 4.7 Motivation
 - The fact map is the main reward.
@@ -218,7 +219,7 @@ Five short lessons come before the check-up: **equal groups** (plates of apples)
 **2 — Arabic numbers (built, §4.6c):**
 - switch between Western and Eastern Arabic numerals (0123 / ٠١٢٣)
 - Arabic number words, including units-first reading (56 is *ستة وخمسون*)
-- the parent records audio of the numbers in their own voice from the dashboard
+- recorded Arabic voice for numbers and questions, shipped with the app (no recording by parents)
 - bilingual mode: hear the question in Arabic, answer in digits
 
 **3:**

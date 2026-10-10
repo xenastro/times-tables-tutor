@@ -78,3 +78,47 @@ test('with no voice on the phone, read-aloud quietly does nothing', async ({ bro
   await expect(page.locator('.question')).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test('the child turns sound on and off, and the phone remembers', async ({ browser, playwright, baseURL }) => {
+  const request = await playwright.request.newContext({ baseURL });
+  const page = await linkPhone(browser, request, await newLearner(request, {}), { viewport: { width: 360, height: 740 } });
+  await page.addInitScript(fakeSpeech, true);
+  await page.reload();
+  // Off to start with for the standard profile; the child switches it on from the home screen.
+  await page.getByRole('button', { name: 'Turn sound on' }).click();
+  await expect(page.getByRole('button', { name: 'Turn sound off' })).toHaveAttribute('aria-pressed', 'true');
+  await page.screenshot({ path: `${SHOTS}/sound-home.png` });
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Turn sound off' })).toBeVisible();
+  await page.getByRole('button', { name: "Let's see what you already know" }).click();
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await expect.poll(() => spoken(page)).toContain('1 times 4');
+  await page.screenshot({ path: `${SHOTS}/sound-practice.png` });
+  // Somewhere quiet: switch it off mid-practice, and the next question isn't read.
+  await page.getByRole('button', { name: 'Turn sound off' }).click();
+  await expect(page.getByRole('button', { name: 'Say it again' })).toHaveCount(0);
+  const before = (await spoken(page)).length;
+  for (const d of '4') await page.locator('.numpad').getByRole('button', { name: d, exact: true }).click();
+  await page.waitForTimeout(1500);
+  expect((await spoken(page)).length).toBe(before);
+});
+
+test('Arabic screens are read from the recorded clips, not the phone voice', async ({ browser, playwright, baseURL }) => {
+  const request = await playwright.request.newContext({ baseURL });
+  const learner = await newLearner(request, { profile: 'young' });
+  const page = await linkPhone(browser, request, learner);
+  // Switch the child's screens to Arabic once the phone is linked.
+  await request.patch(`/api/learners/${learner.id}`, { data: { settings: { profile: 'young', language: 'ar' } } });
+  await page.addInitScript(fakeSpeech, true);
+  await page.addInitScript(() => {
+    const w = window as unknown as { __clips: string[] };
+    w.__clips = [];
+    window.addEventListener('app:arabic-say', (e) => w.__clips.push(...(e as CustomEvent<string[]>).detail));
+  });
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'مرحبًا يا Sam' })).toBeVisible();
+  await page.goto('/practice'); // skip the Understand lessons
+  await page.locator('.panel .btn-primary').click();
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __clips: string[] }).__clips)).toContain('t1x4');
+  expect(await spoken(page)).toEqual([]);
+});
