@@ -37,6 +37,8 @@ export function SettingsPanel({ learner, onSaved }: { learner: LearnerDTO; onSav
   const [s, setS] = useState<LearnerSettings>(withDefaults(learner.settings));
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [confirm, setConfirm] = useState('');
+  // Children who started on their own have no name until a parent writes one.
+  const [name, setName] = useState(learner.displayName);
 
   const set = <K extends keyof LearnerSettings>(k: K, v: LearnerSettings[K]) => {
     setS((prev) => ({ ...prev, [k]: v }));
@@ -46,7 +48,10 @@ export function SettingsPanel({ learner, onSaved }: { learner: LearnerDTO; onSav
   async function save() {
     setStatus('saving');
     try {
-      const { learner: l } = await api<{ learner: LearnerDTO }>('PATCH', `/learners/${learner.id}`, { settings: s });
+      const { learner: l } = await api<{ learner: LearnerDTO }>('PATCH', `/learners/${learner.id}`, {
+        settings: s,
+        displayName: name.trim() || undefined,
+      });
       onSaved(l);
       setStatus('saved');
     } catch {
@@ -62,6 +67,18 @@ export function SettingsPanel({ learner, onSaved }: { learner: LearnerDTO; onSav
   return (
     <section className="card stack" style={{ gap: 16 }}>
       <h2>{t('parent.settings')}</h2>
+      <label className="field">
+        {t('parent.name')}
+        <input
+          className="input"
+          maxLength={40}
+          value={name}
+          onChange={(e) => {
+            setName(e.target.value);
+            setStatus('idle');
+          }}
+        />
+      </label>
       <Choice
         label={t('parent.profile')}
         value={s.profile}
@@ -160,7 +177,7 @@ export function SettingsPanel({ learner, onSaved }: { learner: LearnerDTO; onSav
             <input className="input" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="off" />
           </label>
           <button className="btn btn-danger" disabled={confirm !== 'DELETE'} onClick={() => void remove()}>
-            {t('parent.deleteChild', { name: learner.displayName })}
+            {t('parent.deleteChild', { name: learner.displayName || learner.avatar })}
           </button>
         </div>
       </details>

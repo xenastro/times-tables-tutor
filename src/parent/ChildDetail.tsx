@@ -102,7 +102,7 @@ export function ChildDetail({ id }: { id: string }) {
           <span className="avatar" aria-hidden="true">
             {learner.avatar}
           </span>
-          <h1>{learner.displayName}</h1>
+          <h1>{learner.displayName || t('parent.noName')}</h1>
         </div>
         <button className="btn btn-ghost" onClick={() => void load()} aria-label={t('common.refresh')}>
           ↻

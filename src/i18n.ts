@@ -60,10 +60,13 @@ const PARENT_LANG_KEY = 'tt_parent_lang';
 /** The parent area (and the screens before a phone is linked) remember their own language. */
 export function savedParentLanguage(): Language {
   try {
-    return localStorage.getItem(PARENT_LANG_KEY) === 'ar' ? 'ar' : 'en';
+    const saved = localStorage.getItem(PARENT_LANG_KEY);
+    if (saved === 'ar' || saved === 'en') return saved;
   } catch {
-    return 'en';
+    /* private mode */
   }
+  // First visit: follow the phone's language.
+  return typeof navigator !== 'undefined' && navigator.language?.startsWith('ar') ? 'ar' : 'en';
 }
 
 export function saveParentLanguage(lang: Language) {

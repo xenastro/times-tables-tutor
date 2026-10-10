@@ -17,6 +17,8 @@ interface LearnerCtx {
   syncStatus: SyncStatus;
   addEvents(pending: PendingEvent[]): TutorEvent[];
   updateLook(look: { avatar?: string; theme?: string }): void;
+  /** This phone's token, for the few calls the screens make themselves ("show my code"). */
+  token: string;
 }
 
 const Ctx = createContext<LearnerCtx | null>(null);
@@ -206,6 +208,7 @@ export function LearnerProvider({
     syncStatus,
     addEvents,
     updateLook,
+    token: device.token,
   };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

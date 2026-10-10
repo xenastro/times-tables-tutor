@@ -69,8 +69,9 @@ test('Arabic interface with ٠١٢٣ digits, right to left', async ({ browser, p
     const ctx = await browser.newContext({ viewport: { width: W, height: H }, colorScheme: 'dark' });
     const p = await ctx.newPage();
     await p.goto('/');
-    await p.getByLabel('Code from your parent').fill(code);
-    await p.getByRole('button', { name: 'Link this phone' }).click();
+    await p.getByRole('button', { name: 'I already use Ashra on another phone' }).click();
+    await p.getByLabel('Code').fill(code);
+    await p.getByRole('button', { name: 'Carry on' }).click();
     await expect(p.getByRole('heading', { name: 'مرحبًا يا Huda' })).toBeVisible();
     return p;
   })();
@@ -137,7 +138,8 @@ test('bilingual mode: the question in Arabic words, the answer in digits', async
   await page.waitForTimeout(9000);
   await page.screenshot({ path: `${SHOTS}/bi-words-tip.png` });
   await page.getByRole('button', { name: 'Got it' }).click();
-  await expect(page.locator('.question')).toBeVisible();
+  // Practice carries on: the next question, or (some sessions) the missing-number puzzle's introduction.
+  await expect(page.locator('.question, .guide-expr').first()).toBeVisible();
 });
 
 test('the units-first short lines words up with digits', async ({ browser, baseURL }) => {

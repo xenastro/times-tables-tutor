@@ -2,7 +2,7 @@ import { savedParentLanguage, saveParentLanguage, setLocale, t } from './i18n';
 import { goBack } from './router';
 import { useState } from 'react';
 
-const SECTIONS = ['who', 'stored', 'notStored', 'phone', 'where', 'delete', 'contact'] as const;
+const SECTIONS = ['who', 'stored', 'notStored', 'phone', 'keep', 'where', 'delete', 'contact'] as const;
 
 /** /privacy: what the app keeps, where, and how to delete it. Plain words, no legalese. */
 export function Privacy() {

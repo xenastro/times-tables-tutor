@@ -1,6 +1,6 @@
 import { expect, test } from './quiet';
 import { type APIRequestContext, type Browser } from '@playwright/test';
-import { completeGuide, INVITE, linkPhone, newLearner, padReady, readQuestion, SHOTS, solveExpr } from './helpers';
+import { completeGuide, linkPhone, newLearner, padReady, readQuestion, SHOTS, solveExpr } from './helpers';
 
 /** Creates a parent + child through the API and returns a linked phone page. */
 async function linkedPhone(browser: Browser, request: APIRequestContext, settings: object, colorScheme: 'light' | 'dark') {
@@ -202,14 +202,15 @@ test('a short can be paused to read, then played on from where it stopped', asyn
 test('fact map numbers are large enough to read on a small phone', async ({ browser, playwright, baseURL }) => {
   const request = await playwright.request.newContext({ baseURL });
   await request.post('/api/auth/signup', {
-    data: { email: `m+${Date.now()}@example.com`, password: 'test password 123', inviteCode: INVITE },
+    data: { email: `m+${Date.now()}@example.com`, password: 'test password 123' },
   });
   const { learner } = await (await request.post('/api/learners', { data: { displayName: 'Map', settings: {} } })).json();
   const { code } = await (await request.post(`/api/learners/${learner.id}/pairing-code`)).json();
   const page = await (await browser.newContext({ viewport: { width: 360, height: 740 } })).newPage();
   await page.goto('/');
-  await page.getByLabel('Code from your parent').fill(code);
-  await page.getByRole('button', { name: 'Link this phone' }).click();
+  await page.getByRole('button', { name: 'I already use Ashra on another phone' }).click();
+  await page.getByLabel('Code').fill(code);
+  await page.getByRole('button', { name: 'Carry on' }).click();
   await expect(page.getByRole('heading', { name: 'Hi, Map' })).toBeVisible();
   await page.goto('/map');
   // Only 10 × 10 (plus headers) until the bonus rows are unlocked.

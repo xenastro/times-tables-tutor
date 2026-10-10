@@ -24,14 +24,24 @@
     "updateReady": "A new version is ready. Tap to update."
   },
   "welcome": {
-    "title": "Welcome!",
-    "body": "Ask your parent for a 6-digit code to link this phone.",
-    "codeLabel": "Code from your parent",
-    "link": "Link this phone",
+    "codeLabel": "Code",
+    "link": "Carry on",
     "linking": "Linking…",
-    "invalidCode": "That code didn't work. Codes last 15 minutes — ask for a new one.",
+    "invalidCode": "That code didn't work. Codes last 15 minutes — make a new one.",
     "tooMany": "Too many tries. Please wait a few minutes.",
-    "parentLink": "I'm a parent"
+    "start": "Start practising",
+    "haveCode": "I already use Ashra on another phone",
+    "grownUp": "I'm a grown-up",
+    "pickTitle": "Pick your picture",
+    "ageTitle": "How old are you?",
+    "agePlus": "{n}+",
+    "ageNote": "This picks where you start. A grown-up can change it later.",
+    "starting": "Getting ready…",
+    "codeTitle": "Carry on from another phone",
+    "codeBody": "On your other phone, open Ashra, tap your picture, then “Show my code”. A grown-up can give you a code too.",
+    "offline": "You're offline. Ashra needs the internet the first time.",
+    "notHuman": "We couldn't check this phone. Please try again.",
+    "tapBox": "Tap the box below."
   },
   "home": {
     "hi": "Hi, {name}",
@@ -48,7 +58,12 @@
     "of": "of",
     "seeMap": "See your map",
     "bonusLocked": "Bonus rows ×11 and ×12 unlock when your map is nearly all green.",
-    "bonusUnlocked": "Bonus rows unlocked: ×11 and ×12!"
+    "bonusUnlocked": "Bonus rows unlocked: ×11 and ×12!",
+    "hiNoName": "Hi!",
+    "keepSafeTitle": "Keep your progress safe",
+    "keepSafeBody": "Ask a grown-up to connect Ashra to their account. Then your progress is safe even if this phone gets lost.",
+    "keepSafeHow": "Show me how",
+    "notNow": "Not now"
   },
   "practice": {
     "exit": "Finish for now",
@@ -96,7 +111,16 @@
   "me": {
     "title": "Make it yours",
     "avatar": "Pick an avatar",
-    "theme": "Pick a colour"
+    "theme": "Pick a colour",
+    "codeTitle": "Your code",
+    "codeBody": "Starting on a new phone? Type this code there. A grown-up can type it too, to connect you to their account.",
+    "codeButton": "Show my code",
+    "codeExpires": "Works for {m} more min.",
+    "codeOffline": "You're offline. Try again when you're connected.",
+    "grownUpsTitle": "Grown-ups",
+    "grownUpsBody": "A grown-up can see your progress and keep it safe. They can sign in here, on this phone.",
+    "grownUpsConnected": "You're connected to a grown-up's account.",
+    "grownUpsButton": "Parent area"
   },
   "parent": {
     "thWhen": "When",
@@ -111,15 +135,15 @@
     "email": "Email",
     "password": "Password",
     "passwordHint": "At least 8 characters",
-    "invite": "Invite code",
     "signOut": "Sign out",
     "errors": {
       "invalid_email": "Please enter a valid email.",
       "weak_password": "Password needs at least 8 characters.",
-      "invalid_invite": "That invite code isn't right.",
       "email_taken": "An account with that email already exists.",
       "invalid_login": "Email or password is wrong.",
-      "too_many_attempts": "Too many attempts. Please wait a few minutes."
+      "too_many_attempts": "Too many attempts. Please wait a few minutes.",
+      "not_human": "We couldn't check this browser. Please try again.",
+      "passkey_failed": "That passkey didn't work. Try your password."
     },
     "children": "Children",
     "addChild": "Add a child",
@@ -209,7 +233,11 @@
     "factDetail": "{a} × {b} = {p}",
     "attempts": "{n} answers",
     "noAttempts": "Not practised yet",
-    "level": "Level"
+    "level": "Level",
+    "authNote": "For parents and carers. Children don't need an account.",
+    "noName": "No name yet",
+    "humanFailed": "We couldn't check this browser.",
+    "humanRetry": "Try again"
   },
   "guide": {
     "barLabel": "{n} groups of {size}",
@@ -382,7 +410,7 @@
     "forgotBody": "Enter your account's email. We'll send a link to choose a new password.",
     "send": "Send the link",
     "sent": "If an account uses that email, a link is on its way. It works for 60 minutes, once.",
-    "noEmail": "This app can't send emails yet, so no link was sent. Ask the person who gave you your invite code to help.",
+    "noEmail": "This app can't send emails yet, so no link was sent. See “Questions” on the Privacy page for help.",
     "devLink": "Open the reset link (local testing only)",
     "backToSignIn": "Back to sign in",
     "newTitle": "Choose a new password",
@@ -401,23 +429,72 @@
     "link": "Privacy",
     "intro": "This app is a small family project. Here is exactly what it keeps, and why.",
     "whoTitle": "Who runs it",
-    "who": "A parent built it for their own children and shares it with a few families by invitation. There are no ads, and nothing is sold.",
+    "who": "A parent built it for their own children and shares it for free. There are no ads, and nothing is sold.",
     "storedTitle": "What we keep",
-    "stored": "For parents: your email and a scrambled (hashed) password. For each child: the first name or nickname you enter, an optional birth year, the avatar, colour and settings, and their practice: each answer, how long it took, hints, lessons and the optional “how did that feel?” taps. For linked phones: the browser's short device description and when it was last used.",
+    "stored": "For parents: your email, a scrambled (hashed) password, and the public half of any passkey you add. For each child: the avatar, colour and settings, and their practice: each answer, how long it took, hints, lessons and the optional “how did that feel?” taps. A child who starts on their own gives no name, email or age: the age they tap only picks the starting settings and isn’t kept. A parent may add a first name or nickname, and a birth year. For each phone: a random code that keeps the child signed in (also kept in a cookie, so the child isn’t lost if the browser clears its storage), the browser’s short device description, and when it was last used.",
     "notStoredTitle": "What we don't do",
-    "notStored": "Children have no accounts, emails or passwords. There are no analytics, no trackers, no third-party scripts and no advertising. The only cookie is the parent sign-in cookie. English read-aloud uses the phone's own built-in voice; the Arabic voice is recorded and comes with the app. Nothing your child says is recorded.",
+    "notStored": "Children have no emails or passwords, and no sign-in. There are no analytics, no trackers and no advertising. There are two cookies: the parent sign-in, and the child’s phone code. Nothing is used to contact a child or to build a profile of them beyond their maths practice. The only outside script is Cloudflare Turnstile, a check against automated sign-ups, loaded only on the screens where a child starts, a parent signs up or a password is reset; it sees the browser’s network address and type, as Cloudflare’s Turnstile privacy addendum describes. English read-aloud uses the phone’s own built-in voice; the Arabic voice is recorded and comes with the app. Nothing your child says is recorded.",
     "phoneTitle": "On the phone",
     "phone": "Practice is saved on the phone first, so it works offline, then copied to our server. Unlinking a phone clears its copy the next time it connects.",
+    "keepTitle": "How long we keep it",
+    "keep": "A child nobody has connected to a parent account is deleted automatically: after 7 days if they never practised, otherwise after a year without practice. Everything else stays until you delete it.",
     "whereTitle": "Where it lives",
     "where": "On Cloudflare (Workers and a D1 database in Western Europe), which hosts the app. If password-reset email is turned on, your email address is passed to the email service only to send that message.",
     "deleteTitle": "Deleting",
-    "delete": "Remove one child under that child's Settings, or everything with “Delete my account” at the bottom of the parent area. Deletion is immediate and permanent.",
+    "delete": "Remove one child under that child’s Settings, or everything with “Delete my account” at the bottom of the parent area. Deletion is immediate and permanent. A child with no parent account is removed automatically, as above.",
     "contactTitle": "Questions",
-    "contact": "Ask the person who gave you your invite code.",
+    "contact": "Open an issue at github.com/xenastro/ashra, where the app’s code is public.",
     "updated": "Last updated October 2026."
   },
   "sound": {
     "turnOn": "Turn sound on",
     "turnOff": "Turn sound off"
+  },
+  "lock": {
+    "title": "Parent area locked",
+    "body": "Your child uses this phone too, so the parent area locks after 10 minutes. Enter your password to open it.",
+    "unlock": "Unlock",
+    "wrong": "That password isn't right.",
+    "toChild": "Back to Ashra",
+    "backToChild": "Hand back to your child (locks this area)"
+  },
+  "connect": {
+    "hereTitle": "This child practises on this phone",
+    "hereBody": "Connect them to your account to see their progress, change their settings and keep it safe.",
+    "nameLabel": "First name or nickname (optional)",
+    "hereButton": "Connect to my account",
+    "whoseTitle": "Connected! Whose phone is this?",
+    "whoseBody": "If it's your child's own phone, you'll be signed out here so they can't open the parent area.",
+    "childsPhone": "My child's phone — sign me out",
+    "myPhone": "My phone — keep me signed in",
+    "codeButton": "Connect a child who already uses Ashra",
+    "alreadyUses": "Already using Ashra? Connect them with their code instead.",
+    "codeTitle": "Connect a child who already uses Ashra",
+    "codeBody": "On your child’s phone: tap their picture, then “Show my code”.",
+    "codeLabel": "Code from your child's phone",
+    "codeConnect": "Connect",
+    "whereTitle": "Where will {name} practise?",
+    "thisPhone": "On this phone",
+    "thisPhoneNote": "This phone switches to your child's practice. The parent area stays here, behind your password.",
+    "anotherPhone": "On another phone",
+    "errors": {
+      "invalid_code": "That code didn't work. Codes last 15 minutes — make a new one on the child's phone.",
+      "already_connected": "This child is already connected to another account.",
+      "too_many_learners": "An account can have up to 10 children.",
+      "too_many_attempts": "Too many attempts. Please wait a few minutes.",
+      "offline": "You're offline."
+    }
+  },
+  "passkeys": {
+    "title": "Passkeys",
+    "note": "Sign in with this phone's fingerprint, face or screen lock instead of your password. On a phone your child also uses, the parent area still asks for your password, since your child may know the screen lock.",
+    "add": "Add a passkey on this device",
+    "signIn": "Sign in with a passkey",
+    "remove": "Remove",
+    "unnamed": "Passkey",
+    "added": "Added {when}",
+    "used": "used {when}",
+    "addedNow": "Passkey added",
+    "failed": "The passkey wasn't added. Please try again."
   }
 }

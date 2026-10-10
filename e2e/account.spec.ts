@@ -1,5 +1,5 @@
 import { expect, test } from './quiet';
-import { INVITE, SHOTS } from './helpers';
+import { SHOTS } from './helpers';
 
 const W = 360;
 const H = 740;
@@ -8,7 +8,7 @@ test('a parent who forgot their password resets it with a one-time link', async 
   test.skip(!baseURL?.includes('5173'), 'the reset link is only shown on screen by the local server');
   const email = `forgot+${Date.now()}@example.com`;
   const request = await playwright.request.newContext({ baseURL });
-  await request.post('/api/auth/signup', { data: { email, password: 'first password', inviteCode: INVITE } });
+  await request.post('/api/auth/signup', { data: { email, password: 'first password' } });
 
   const page = await (await browser.newContext({ viewport: { width: W, height: H } })).newPage();
   await page.goto('/parent');
@@ -35,7 +35,7 @@ test('a parent who forgot their password resets it with a one-time link', async 
 test('a parent deletes their account and everything in it', async ({ browser, playwright, baseURL }) => {
   const email = `delete+${Date.now()}@example.com`;
   const request = await playwright.request.newContext({ baseURL });
-  await request.post('/api/auth/signup', { data: { email, password: 'delete me please', inviteCode: INVITE } });
+  await request.post('/api/auth/signup', { data: { email, password: 'delete me please' } });
   await request.post('/api/learners', { data: { displayName: 'Temp', settings: {} } });
 
   const ctx = await browser.newContext({ viewport: { width: W, height: H }, storageState: await request.storageState() });
@@ -61,7 +61,7 @@ test('the privacy page is reachable before linking a phone, in English and Arabi
   await page.goto('/');
   await page.getByRole('button', { name: 'Privacy' }).click();
   await expect(page.getByRole('heading', { name: 'Privacy' })).toBeVisible();
-  await expect(page.getByText('Children have no accounts')).toBeVisible();
+  await expect(page.getByText('Children have no emails or passwords')).toBeVisible();
   await page.screenshot({ path: `${SHOTS}/acc-privacy.png`, fullPage: true });
   await page.getByRole('button', { name: 'العربية' }).click();
   await expect(page.getByRole('heading', { name: 'الخصوصية' })).toBeVisible();

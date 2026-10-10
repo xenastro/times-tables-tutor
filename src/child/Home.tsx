@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { FactMap } from '../components/FactMap';
 import { LESSONS, nextLesson } from '../engine/lessons';
@@ -27,6 +27,10 @@ export function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [events]);
   const daysThisWeek = week.filter(Boolean).length;
+  const practiceDays = useMemo(() => new Set(events.filter((e) => e.type === 'answer').map((e) => dayKey(e.ts))).size, [events]);
+  const [nudgeHidden, setNudgeHidden] = useState(nudgeDismissed);
+  // A child who started alone: after a few days, a calm word about keeping their progress safe.
+  const nudge = learner.connected === false && practiceDays >= NUDGE_AFTER_DAYS && !nudgeHidden;
 
   const { checkup } = state;
   // Younger learners start with the "Understand" lessons, before the check-up.
@@ -58,7 +62,7 @@ export function Home() {
           <button className="avatar" aria-label={t('me.title')} onClick={() => navigate('/me')}>
             {learner.avatar}
           </button>
-          <h1 style={{ fontSize: '1.4rem' }}>{t('home.hi', { name: learner.displayName })}</h1>
+          <h1 style={{ fontSize: '1.4rem' }}>{learner.displayName ? t('home.hi', { name: learner.displayName }) : t('home.hiNoName')}</h1>
         </div>
         <SoundToggle />
       </header>
@@ -67,6 +71,27 @@ export function Home() {
         <button className="banner" onClick={() => updateServiceWorker(true)}>
           {t('common.updateReady')}
         </button>
+      )}
+
+      {nudge && (
+        <section className="card stack" aria-labelledby="nudge-title">
+          <h2 id="nudge-title">{t('home.keepSafeTitle')}</h2>
+          <p className="muted small">{t('home.keepSafeBody')}</p>
+          <div className="row">
+            <button className="btn btn-soft grow" onClick={() => navigate('/me')}>
+              {t('home.keepSafeHow')}
+            </button>
+            <button
+              className="btn btn-ghost"
+              onClick={() => {
+                dismissNudge();
+                setNudgeHidden(true);
+              }}
+            >
+              {t('home.notNow')}
+            </button>
+          </div>
+        </section>
       )}
 
       <section className="hero">
@@ -159,4 +184,24 @@ export function Home() {
       </p>
     </main>
   );
+}
+
+const NUDGE_AFTER_DAYS = 3;
+const NUDGE_KEY = 'ashra.nudgeDismissed';
+
+/** "Not now" hides the card for a week. */
+function nudgeDismissed(): boolean {
+  try {
+    return Date.now() - Number(localStorage.getItem(NUDGE_KEY) ?? 0) < 7 * DAY;
+  } catch {
+    return false;
+  }
+}
+
+function dismissNudge() {
+  try {
+    localStorage.setItem(NUDGE_KEY, String(Date.now()));
+  } catch {
+    /* private mode */
+  }
 }

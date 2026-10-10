@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { getDevice, type DeviceRecord } from '../data/db';
+import { api } from '../data/api';
+import { getDevice, setDevice as storeDevice, type DeviceRecord } from '../data/db';
+import type { LearnerDTO } from '../shared/api';
 import { savedParentLanguage, setLocale, t } from '../i18n';
 import { navigate } from '../router';
 import { Customize } from './Customize';
@@ -18,7 +20,19 @@ export function ChildApp({ path }: { path: string }) {
   const [device, setDevice] = useState<DeviceRecord | null | undefined>(undefined);
 
   useEffect(() => {
-    void getDevice().then(setDevice);
+    void getDevice().then(async (saved) => {
+      if (saved) return setDevice(saved);
+      // The browser may have cleared its storage (Safari does after 7 days away): the server's
+      // cookie brings the child back.
+      try {
+        const r = await api<{ token: string; learner: LearnerDTO }>('POST', '/restore');
+        const restored: DeviceRecord = { token: r.token, learner: r.learner, lastSeq: 0 };
+        await storeDevice(restored);
+        setDevice(restored);
+      } catch {
+        setDevice(null);
+      }
+    });
   }, []);
 
   const onUnpaired = useCallback(() => {

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { HumanCheckBox } from '../components/Turnstile';
 import { api, ApiError } from '../data/api';
 import { t } from '../i18n';
 import { navigate } from '../router';
@@ -9,14 +10,19 @@ export function ForgotPassword({ onBack }: { onBack: () => void }) {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ emailEnabled: boolean; devLink?: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [human, setHuman] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError(null);
     try {
-      setResult(await api<{ emailEnabled: boolean; devLink?: string }>('POST', '/auth/reset-request', { email }));
+      setResult(
+        await api<{ emailEnabled: boolean; devLink?: string }>('POST', '/auth/reset-request', { email, turnstileToken: human }),
+      );
     } catch (err) {
+      setAttempt((a) => a + 1);
       const code = err instanceof ApiError ? err.code : 'server_error';
       const msg = t(`parent.errors.${code}`);
       setError(msg.startsWith('parent.errors.') ? t('common.error') : msg);
@@ -46,7 +52,8 @@ export function ForgotPassword({ onBack }: { onBack: () => void }) {
             <input className="input" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
           </label>
           {error && <p className="error-text" role="alert">{error}</p>}
-          <button className="btn btn-primary btn-big" disabled={busy}>
+          <HumanCheckBox onToken={setHuman} attempt={attempt} />
+          <button className="btn btn-primary btn-big" disabled={busy || human === null}>
             {t('reset.send')}
           </button>
         </>

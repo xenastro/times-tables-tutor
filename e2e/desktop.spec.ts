@@ -1,6 +1,5 @@
 import { expect, test } from './quiet';
 
-const INVITE = process.env.INVITE_CODE ?? 'family-test';
 const SHOTS = process.env.SHOTS_DIR ?? 'e2e-results/shots';
 
 test('parent fact details open as a centred dialog that fits a laptop screen', async ({ browser, baseURL }) => {
@@ -8,7 +7,7 @@ test('parent fact details open as a centred dialog that fits a laptop screen', a
   const page = await ctx.newPage();
   await page.goto(baseURL + '/parent');
   await page.request.post('/api/auth/signup', {
-    data: { email: `d+${Date.now()}@example.com`, password: 'test password 123', inviteCode: INVITE },
+    data: { email: `d+${Date.now()}@example.com`, password: 'test password 123' },
   });
   const { learner } = await (await page.request.post('/api/learners', { data: { displayName: 'Desk', settings: {} } })).json();
   await page.goto(`/parent/child/${learner.id}`);

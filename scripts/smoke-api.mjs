@@ -1,10 +1,22 @@
 // End-to-end check of the API against a running server.
-// Usage: node scripts/smoke-api.mjs [baseUrl] [inviteCode]
+// Usage: node scripts/smoke-api.mjs [baseUrl]
+// Against the live site, the bot check refuses scripted sign-ups: run it locally.
 const BASE = process.argv[2] ?? 'http://127.0.0.1:8787';
-const INVITE = process.argv[3] ?? 'family-test';
 
+/** The browser's cookies, as one Cookie header ("a=1; b=2"). Save and restore it to switch browsers. */
 let cookie = '';
 let failures = 0;
+
+function mergeCookies(jar, setCookies) {
+  const all = new Map(jar ? jar.split('; ').map((p) => [p.split('=')[0], p]) : []);
+  for (const sc of setCookies) {
+    const pair = sc.split(';')[0];
+    const name = pair.split('=')[0];
+    if (pair.endsWith('=') || /max-age=0/i.test(sc)) all.delete(name);
+    else all.set(name, pair);
+  }
+  return [...all.values()].join('; ');
+}
 
 async function call(method, path, body, headers = {}) {
   const res = await fetch(BASE + path, {
@@ -12,8 +24,7 @@ async function call(method, path, body, headers = {}) {
     headers: { 'content-type': 'application/json', ...(cookie ? { cookie } : {}), ...headers },
     body: body ? JSON.stringify(body) : undefined,
   });
-  const set = res.headers.get('set-cookie');
-  if (set) cookie = set.split(';')[0];
+  cookie = mergeCookies(cookie, res.headers.getSetCookie());
   let data = null;
   try {
     data = await res.json();
@@ -31,11 +42,9 @@ function check(name, cond, extra) {
 
 const email = `parent+${Date.now()}@example.com`;
 
-let r = await call('POST', '/api/auth/signup', { email, password: 'short', inviteCode: INVITE });
+let r = await call('POST', '/api/auth/signup', { email, password: 'short' });
 check('rejects weak password', r.status === 400 && r.data.error === 'weak_password', r);
-r = await call('POST', '/api/auth/signup', { email, password: 'correct horse', inviteCode: 'nope' });
-check('rejects wrong invite code', r.status === 403, r);
-r = await call('POST', '/api/auth/signup', { email, password: 'correct horse', inviteCode: INVITE });
+r = await call('POST', '/api/auth/signup', { email, password: 'correct horse' });
 check('signs up', r.status === 200 && r.data.email === email, r);
 r = await call('GET', '/api/auth/me');
 check('session cookie works', r.status === 200 && r.data.email === email, r);
@@ -100,7 +109,7 @@ const deviceId = r.data.devices[0].id;
 // Another parent must not see this learner.
 const otherCookie = cookie;
 cookie = '';
-await call('POST', '/api/auth/signup', { email: `other+${now}@example.com`, password: 'another pass', inviteCode: INVITE });
+await call('POST', '/api/auth/signup', { email: `other+${now}@example.com`, password: 'another pass' });
 r = await call('GET', `/api/learners/${learnerId}/events`);
 check('other parent is denied', r.status === 404, r);
 cookie = otherCookie;
@@ -123,7 +132,7 @@ check('deletes learner and data', r.status === 200, r);
 // Password reset (the local server returns the link instead of emailing it) and account deletion.
 cookie = '';
 const resetEmail = `reset+${Date.now()}@example.com`;
-await call('POST', '/api/auth/signup', { email: resetEmail, password: 'old password 1', inviteCode: INVITE });
+await call('POST', '/api/auth/signup', { email: resetEmail, password: 'old password 1' });
 await call('POST', '/api/learners', { displayName: 'Gone Soon', settings: {} });
 cookie = '';
 r = await call('POST', '/api/auth/reset-request', { email: `nobody+${Date.now()}@example.com` });
@@ -157,6 +166,87 @@ r = await call('GET', '/api/learners');
 check('deleted account is signed out', r.status === 401, r);
 r = await call('POST', '/api/auth/login', { email: resetEmail, password: 'new password 2' });
 check('deleted account cannot sign in', r.status === 401 || r.status === 429, r);
+
+// ---- Onboarding: a child starts alone, moves phones, and a parent connects later.
+const cookieNamed = (name) => cookie.split('; ').some((p) => p.startsWith(`${name}=`));
+cookie = '';
+r = await call('GET', '/api/config');
+check('config answers', r.status === 200 && 'turnstileSiteKey' in r.data, r);
+r = await call('POST', '/api/start', { avatar: '🦉', theme: 'green', settings: { profile: 'young', language: 'ar', bogus: 1 } });
+check('a child starts without signing in', r.status === 200 && r.data.token && r.data.learner.connected === false, r);
+check('nothing personal: no name', r.data?.learner.displayName === '' && r.data?.learner.settings.bogus === undefined, r.data);
+check('the phone keeps a backup cookie', cookieNamed('ashra_device'), cookie);
+const child = { id: r.data.learner.id, auth: { authorization: `Bearer ${r.data.token}` }, token: r.data.token };
+const childPhone = cookie;
+
+r = await call('POST', '/api/restore');
+check('wiped storage: the cookie brings the child back', r.status === 200 && r.data.token === child.token, r);
+cookie = '';
+r = await call('POST', '/api/restore');
+check('restore without the cookie finds nothing', r.status === 404, r);
+
+r = await call('POST', '/api/device/code', null, child.auth);
+check('"show my code" gives a code', /^\d{6}$/.test(r.data.code), r);
+r = await call('POST', '/api/pair', { code: r.data.code, label: 'second phone' });
+check('the code moves the child to another phone', r.status === 200 && r.data.learner.id === child.id && r.data.token !== child.token, r);
+
+r = await call('POST', '/api/device/code', null, child.auth);
+const childCode = r.data.code;
+cookie = '';
+await call('POST', '/api/auth/signup', { email: `claim+${Date.now()}@example.com`, password: 'claim password' });
+const claimer = cookie;
+r = await call('POST', '/api/learners/claim', { code: '000000' });
+check('connecting rejects a wrong code', r.status === 404, r);
+r = await call('POST', '/api/learners/claim', { code: childCode, displayName: 'Kid' });
+check('a parent connects the child with the code', r.status === 200 && r.data.learner.connected && r.data.learner.displayName === 'Kid', r);
+r = await call('GET', '/api/learners');
+check('the child is in the parent account', r.data.learners.some((l) => l.id === child.id), r);
+r = await call('GET', '/api/device/me', null, child.auth);
+check('the child phone sees the connection and name', r.data.learner.connected && r.data.learner.displayName === 'Kid', r);
+r = await call('POST', '/api/device/code', null, child.auth);
+const secondCode = r.data.code;
+cookie = '';
+await call('POST', '/api/auth/signup', { email: `thief+${Date.now()}@example.com`, password: 'thief password' });
+r = await call('POST', '/api/learners/claim', { code: secondCode });
+check('a connected child cannot be claimed by someone else', r.status === 409 && r.data.error === 'already_connected', r);
+
+// A parent signs in on the child's own phone and connects them there.
+cookie = '';
+r = await call('POST', '/api/start', { avatar: '🐢', theme: 'teal', settings: {} });
+const child2 = { id: r.data.learner.id, auth: { authorization: `Bearer ${r.data.token}` } };
+await call('POST', '/api/auth/signup', { email: `onphone+${Date.now()}@example.com`, password: 'phone password' });
+r = await call('GET', '/api/auth/me');
+check('signing in on a child phone marks it shared, open for now', r.data.shared === true && r.data.locked === false, r);
+r = await call('POST', '/api/learners/claim', {}, child2.auth);
+check('connects the child on this phone without a code', r.status === 200 && r.data.learner.id === child2.id, r);
+await call('POST', '/api/auth/lock');
+r = await call('GET', '/api/learners');
+check('locked parent area refuses', r.status === 403 && r.data.error === 'locked', r);
+r = await call('POST', '/api/auth/unlock', { password: 'nope nope' });
+check('unlock needs the right password', r.status === 401, r);
+r = await call('POST', '/api/auth/unlock', { password: 'phone password' });
+r = await call('GET', '/api/learners');
+check('unlocked again with the password', r.status === 200 && r.data.learners.length === 1, r);
+
+// A parent adds a child who will practise on the parent's own phone.
+cookie = claimer;
+r = await call('GET', '/api/auth/me');
+check('a phone without a child is not locked', r.data.shared === false, r);
+r = await call('POST', '/api/learners', { displayName: 'Here', settings: {} });
+r = await call('POST', `/api/learners/${r.data.learner.id}/this-phone`, { label: 'parent phone' });
+check('"this phone" links the parent phone', r.status === 200 && r.data.token, r);
+r = await call('GET', '/api/auth/me');
+check('…and the parent area now locks when idle', r.data.shared === true, r);
+
+r = await call('POST', '/api/auth/passkey/login-options');
+check('passkey sign-in offers a challenge', r.status === 200 && r.data.options.challenge && r.data.challengeId, r);
+r = await call('POST', '/api/auth/passkey/login', { challengeId: r.data.challengeId, response: { id: 'nope', response: {} } });
+check('a made-up passkey is refused', r.status === 401, r);
+r = await call('POST', '/api/auth/passkey/register-options');
+check('passkey registration needs an open parent area', r.status === 200 || r.status === 403, r);
+cookie = childPhone;
+r = await call('POST', '/api/auth/passkey/register-options');
+check('passkey registration needs a parent', r.status === 401, r);
 
 console.log(failures ?`\n${failures} check(s) failed` : '\nAll API checks passed');
 process.exit(failures ? 1 : 0);

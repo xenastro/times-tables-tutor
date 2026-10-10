@@ -18,5 +18,13 @@
     }
   ],
   "routes": [{ "pattern": "ashra.aburaddad.com", "custom_domain": true }],
+  "vars": {
+    "RP_ID": "ashra.aburaddad.com",
+    "ORIGINS": "https://ashra.aburaddad.com",
+    // Turnstile widget "Ashra" (public key; the secret is the Worker secret TURNSTILE_SECRET).
+    "TURNSTILE_SITE_KEY": "0x4AAAAAAFTHrLaaN3rEMzZv"
+  },
+  // Nightly clean-up: children nobody connected (see /privacy) and expired sign-in leftovers.
+  "triggers": { "crons": ["17 3 * * *"] },
   "observability": { "enabled": true }
 }

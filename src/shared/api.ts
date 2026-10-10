@@ -9,6 +9,8 @@ export interface LearnerDTO {
   avatar: string;
   theme: string;
   settings: Partial<LearnerSettings>;
+  /** A parent has this child in their account (children may start on their own). */
+  connected?: boolean;
 }
 
 export interface LearnerSummaryDTO extends LearnerDTO {
@@ -21,6 +23,13 @@ export interface DeviceDTO {
   label: string | null;
   pairedAt: number;
   lastSeenAt: number | null;
+}
+
+export interface PasskeyDTO {
+  id: string;
+  label: string | null;
+  createdAt: number;
+  lastUsedAt: number | null;
 }
 
 export interface EventDTO {

@@ -1,13 +1,13 @@
 const PBKDF2_ITERATIONS = 100_000; // the maximum Workers allows
 const enc = new TextEncoder();
 
-function b64url(bytes: Uint8Array): string {
+export function b64url(bytes: Uint8Array): string {
   let s = '';
   for (const b of bytes) s += String.fromCharCode(b);
   return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-function fromB64url(s: string): Uint8Array {
+export function fromB64url(s: string): Uint8Array<ArrayBuffer> {
   const bin = atob(s.replace(/-/g, '+').replace(/_/g, '/'));
   return Uint8Array.from(bin, (ch) => ch.charCodeAt(0));
 }

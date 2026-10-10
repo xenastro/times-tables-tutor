@@ -1,3 +1,5 @@
+export const PARENT_LOCKED = 'parent:locked';
+
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -33,7 +35,12 @@ export async function api<T>(
   } catch {
     /* empty body */
   }
-  if (!res.ok) throw new ApiError(res.status, (data as { error?: string })?.error ?? 'server_error');
+  if (!res.ok) {
+    const code = (data as { error?: string })?.error ?? 'server_error';
+    // A parent area shared with a child locks itself when idle: show the unlock screen.
+    if (code === 'locked' && typeof window !== 'undefined') window.dispatchEvent(new Event(PARENT_LOCKED));
+    throw new ApiError(res.status, code);
+  }
   return data as T;
 }
 
@@ -44,4 +51,9 @@ export function newId(): string {
     const r = (Math.random() * 16) | 0;
     return (ch === 'x' ? r : (r & 0x3) | 0x8).toString(16);
   });
+}
+
+/** The browser's short description of the phone, shown to the parent under "Linked phones". */
+export function phoneLabel(): string | null {
+  return navigator.userAgent.match(/\(([^)]+)\)/)?.[1]?.slice(0, 60) ?? null;
 }

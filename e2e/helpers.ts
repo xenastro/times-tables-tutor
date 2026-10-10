@@ -1,6 +1,5 @@
 import { expect, type APIRequestContext, type Browser, type Page } from '@playwright/test';
 
-export const INVITE = process.env.INVITE_CODE ?? 'family-test';
 export const SHOTS = process.env.SHOTS_DIR ?? 'e2e-results/shots';
 
 /** Answer for a guide step, e.g. "10 × 3 = ?", "half of 30 = ?", "70 − 7 = ?", "? × 7 = 56". */
@@ -67,7 +66,7 @@ export async function completeGuide(page: Page) {
 /** Creates a parent + child through the API and returns the parent's request context and the child's id. */
 export async function newLearner(request: APIRequestContext, settings: object, name = 'Sam') {
   await request.post('/api/auth/signup', {
-    data: { email: `v+${Date.now()}${Math.random()}@example.com`, password: 'test password 123', inviteCode: INVITE },
+    data: { email: `v+${Date.now()}${Math.random()}@example.com`, password: 'test password 123' },
   });
   const { learner } = await (
     await request.post('/api/learners', { data: { displayName: name, avatar: '🐙', theme: 'violet', settings } })
@@ -89,8 +88,9 @@ export async function linkPhone(
   });
   const page = await ctx.newPage();
   await page.goto('/');
-  await page.getByLabel('Code from your parent').fill(code);
-  await page.getByRole('button', { name: 'Link this phone' }).click();
+  await page.getByRole('button', { name: 'I already use Ashra on another phone' }).click();
+  await page.getByLabel('Code').fill(code);
+  await page.getByRole('button', { name: 'Carry on' }).click();
   await expect(page.getByRole('heading', { name: `Hi, ${learner.displayName}` })).toBeVisible();
   return page;
 }

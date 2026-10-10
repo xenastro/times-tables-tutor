@@ -30,7 +30,7 @@ These rules apply to every design decision.
 |---|---|---|
 | Older learner (lower secondary) | Check-up, then Strategise or Fluency for each fact | **Full.** This release is built and polished for them. |
 | Younger learner (early primary) | Starts with ×10, ×2, ×5 only, using pictures | **Basic.** Uses the same engine with the younger settings (§4.5). The full "Understand" path comes later. |
-| Parent | — | **Full.** Dashboard, child profiles, linking a child's phone. |
+| Parent | — | **Full.** Dashboard, child profiles, linking a child's phone, connecting a child who started alone. |
 
 ## 4. How a learner uses the app
 
@@ -115,6 +115,7 @@ Five short lessons come before the check-up: **equal groups** (plates of apples)
 ## 5. Screens
 
 **Child (phone, used with one thumb):**
+0. **Front door** (a phone with no child yet, §7): English / العربية, **Start practising**, "I already use Ashra on another phone", "I'm a grown-up", Privacy.
 1. **Home:** avatar, "Start today's practice" button, mini fact map, streak.
 2. **Practice:** large question in the top half and a large custom number pad in the bottom half (no system keyboard). A hint button opens the guide.
 3. **Guide:** the method in baby steps, with a bar model and, for some facts, an animated short at the end (§4.6).
@@ -122,8 +123,8 @@ Five short lessons come before the check-up: **equal groups** (plates of apples)
 5. **Session summary.**
 
 **Parent (phone or desktop):**
-1. Sign up / sign in.
-2. **Children:** add or edit a profile, then link a phone with a 6-digit code or QR code that expires after 15 minutes.
+1. Sign up / sign in (password or passkey).
+2. **Children:** add a profile, then choose **on this phone** or **on another phone** (a 6-digit code that expires after 15 minutes); or connect a child who already uses Ashra with the code from their phone.
 3. **Dashboard for each child:**
    - fact map
    - trouble facts (lowest accuracy, slowest)
@@ -163,15 +164,23 @@ Five short lessons come before the check-up: **equal groups** (plates of apples)
 | Table | Columns |
 |---|---|
 | `parents` | id, email, password_hash, created_at |
-| `learners` | id, parent_id, display_name, birth_year, avatar, theme, settings_json, created_at |
-| `devices` | id, learner_id, token_hash, paired_at, last_seen_at |
-| `pairing_codes` | code, learner_id, expires_at |
+| `sessions` | token_hash, parent_id, expires_at, shared, unlocked_until |
+| `passkeys` | id (credential ID), parent_id, public_key, counter, transports, label, created_at, last_used_at |
+| `learners` | id, parent_id (empty until a parent connects), display_name, birth_year, avatar, theme, settings_json, created_at, last_active_at |
+| `devices` | id, learner_id, token_hash, label, paired_at, last_seen_at |
+| `pairing_codes` | code, learner_id, expires_at, kind (`parent` or `child`) |
 | `events` | id (UUID), learner_id, device_id, type, payload_json, client_ts, server_ts |
 
 ## 7. Accounts and privacy
-- **Parents** sign in with email and password. Passwords are hashed with PBKDF2 via the browser-standard crypto built into Workers. Sessions use an HttpOnly cookie. Until the app opens to other families, sign-up requires an invite code.
-- **Children never have passwords or email addresses.** A phone is linked to a child profile with a code and receives a device token. The parent can unlink a phone at any time.
-- **Data about children is kept to a minimum:** first name or nickname, birth year, and practice events. No analytics or third-party trackers.
+- **Sending the link is enough.** A phone with no child shows the front door (§5). Sign-up is open to anyone (no invite code).
+- **A child starts alone,** with no sign-in and nothing personal: they pick a picture and colour, then tap their age (5 … 12+). The age only picks the starting settings (7 or under: the younger profile) and isn't stored; the screen language becomes the child's language. The server creates a child with no parent and no name, and the phone gets a device token. Children never have passwords, emails or sign-in: Google's API policy says apps directed primarily at children shouldn't use Google Sign-In, Apple blocks Sign in with Apple under 13, and a child's passkey would land in a parent's password manager on a shared phone.
+- **Keeping a child without a parent:** "Show my code" (under the child's picture) gives a 6-digit code for 15 minutes. Typed on a new phone ("I already use Ashra on another phone") it moves the child there. The device token is also kept in an HttpOnly cookie, so a browser that clears its storage (Safari does after 7 days away) gets the child back. After 3 practice days, the home screen suggests asking a grown-up to connect ("Not now" hides it for a week). A child with no parent who loses their only phone loses their progress.
+- **A parent connects later,** three ways: (1) on the child's phone ("Grown-ups" → sign in or sign up → "Connect to my account", then "Whose phone is this?": the child's own phone signs the parent out); (2) on the parent's phone, with the code from the child's phone; (3) parent first: add a child, then "On this phone" or "On another phone". A child connected to one parent can't be claimed by another.
+- **One phone for parent and child:** when a parent signs in on a phone that holds a child (or adds the child "on this phone"), the parent area locks after 10 minutes without use and asks for the **password** (not a passkey: the child may know the phone's screen lock). "Hand back to your child" locks it at once. One child per phone.
+- **Parents** sign in with email and password, or a **passkey** added in the parent area (WebAuthn, discoverable credential; user ID is the parent's random ID). Passwords are hashed with PBKDF2 via the browser-standard crypto built into Workers. Sessions use an HttpOnly cookie.
+- **Bots and abuse:** Cloudflare Turnstile (managed mode: at most a checkbox, never a puzzle) on the three screens that create something: a child starting, parent sign-up and password reset. Its script loads only there. If the check can't run for a child (a filtered network, or the checkbox isn't tapped within 20 s, with "Tap the box below." shown), the child starts anyway, but such starts are limited to 3 per network per hour and 50 a day. Limits: 20 new children per network per hour (a school class shares one) and 300 a day site-wide; 10 parent sign-ups per network per hour; 5,000 answers per child per day; 10 children per parent.
+- **Retention:** a nightly job deletes children with no parent who never practised (after 7 days) or haven't practised for a year, plus expired sessions, codes and challenges.
+- **Data about children is kept to a minimum:** avatar, colour, settings and practice events; a first name or nickname and birth year only if a parent adds them. No analytics or third-party trackers. Under COPPA, the device token is a persistent identifier used only for internal operations (keeping the child signed in and their practice), which the privacy page states.
 - **Built for opening to other families (release 3):**
   - **Password reset:** "Forgot password?" sends a one-time link that works for 60 minutes (only a hash is stored; the same reply whether or not the email has an account; rate-limited). Sending is pluggable ([worker/email.ts](worker/email.ts)); until a provider is configured the page says no email could be sent.
   - **Account deletion:** "Delete my account" (password + typing DELETE) removes the parent, every child, all events and phones at once.
@@ -223,7 +232,8 @@ Five short lessons come before the check-up: **equal groups** (plates of apples)
 - bilingual mode: hear the question in Arabic, answer in digits
 
 **3:**
-- opening to other families (password reset, deletion, privacy page): **built** (§7); email sending needs a provider
+- opening to other families (password reset, deletion, privacy page): **built** (§7); email sending needs a provider (Cloudflare's own sending needs the Workers Paid plan)
+- onboarding: children start alone, parents connect later, one phone for both, open sign-up with bot limits, passkeys for parents: **built** (§7)
 - further IGCSE topics on the same engine: **proposal** in [docs/next-topics.md](docs/next-topics.md)
 
 ## 10. How we'll know it's working

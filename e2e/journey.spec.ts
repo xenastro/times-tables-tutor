@@ -2,7 +2,6 @@ import { expect, test } from './quiet';
 import type { Page } from '@playwright/test';
 import { readQuestion, solveExpr, tapNumber, type AskedQuestion } from './helpers';
 
-const INVITE = process.env.INVITE_CODE ?? 'family-test';
 const SHOTS = process.env.SHOTS_DIR ?? 'e2e-results/shots';
 
 async function shot(page: Page, name: string) {
@@ -93,13 +92,13 @@ test('parent sets up, child does check-up and practice, parent sees progress', a
   await parent.getByRole('tab', { name: 'Create account' }).click();
   await parent.getByLabel('Email').fill(`parent+${Date.now()}@example.com`);
   await parent.getByLabel('Password').fill('test password 123');
-  await parent.getByLabel('Invite code').fill(INVITE);
   await shot(parent, '01-parent-signup');
   await parent.getByRole('button', { name: 'Create account' }).last().click();
 
   await parent.getByLabel('First name or nickname').fill('Test Kid');
   await shot(parent, '02-parent-add-child');
   await parent.getByRole('button', { name: 'Add child' }).last().click();
+  await parent.getByRole('button', { name: 'On another phone' }).click();
   await expect(parent.getByRole('heading', { name: 'Test Kid' })).toBeVisible();
   await parent.getByRole('button', { name: 'Link a phone' }).click();
   const code = (await parent.locator('.code-display').textContent())!.trim();
@@ -111,8 +110,9 @@ test('parent sets up, child does check-up and practice, parent sees progress', a
   const child = await childCtx.newPage();
   await child.goto('/');
   await shot(child, '04-child-welcome');
-  await child.getByLabel('Code from your parent').fill(code);
-  await child.getByRole('button', { name: 'Link this phone' }).click();
+  await child.getByRole('button', { name: 'I already use Ashra on another phone' }).click();
+  await child.getByLabel('Code').fill(code);
+  await child.getByRole('button', { name: 'Carry on' }).click();
   await expect(child.getByRole('heading', { name: 'Hi, Test Kid' })).toBeVisible();
   await shot(child, '05-child-home-new');
 
@@ -194,8 +194,9 @@ test('parent sets up, child does check-up and practice, parent sees progress', a
   const code2 = (await parent.locator('.code-display').textContent())!.trim();
   const phone2 = await (await browser.newContext()).newPage();
   await phone2.goto('/');
-  await phone2.getByLabel('Code from your parent').fill(code2);
-  await phone2.getByRole('button', { name: 'Link this phone' }).click();
+  await phone2.getByRole('button', { name: 'I already use Ashra on another phone' }).click();
+  await phone2.getByLabel('Code').fill(code2);
+  await phone2.getByRole('button', { name: 'Carry on' }).click();
   await expect(phone2.getByRole('button', { name: 'Practise a little more' })).toBeVisible({ timeout: 15_000 });
   await shot(phone2, '17-second-phone-restored');
 });

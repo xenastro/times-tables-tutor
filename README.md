@@ -20,14 +20,20 @@ Every answer is stored as an event on the phone first (IndexedDB) and synced to 
 ```sh
 npm install
 npm run db:migrate:local
-echo "INVITE_CODE=family-test" > .dev.vars
-echo "EMAIL_LOG_LINKS=1" >> .dev.vars   # local only: shows password-reset links on screen
+# Local only. Reset links shown on screen; no sign-up limits (the browser tests sign up more
+# accounts than one network may per hour); passkeys on localhost (they don't work on 127.0.0.1).
+cat > .dev.vars <<'VARS'
+EMAIL_LOG_LINKS=1
+DEV_NO_SIGNUP_LIMITS=1
+RP_ID=localhost
+ORIGINS=http://localhost:5173,http://localhost:8787
+VARS
 npm run build          # the Worker serves ./dist
 npm run dev:api        # Worker + local D1 on :8787
 npm run dev            # app on :5173, proxies /api to :8787
 ```
 
-Open http://localhost:5173/parent to create a parent account (invite code from `.dev.vars`), add a child, and link a phone with the code shown.
+Open http://localhost:5173 and tap "Start practising" to start as a child, or "I'm a grown-up" to create a parent account. Locally the bot check (Turnstile) is off: it runs only when the Worker has `TURNSTILE_SECRET`.
 
 ## Tests
 
@@ -36,6 +42,7 @@ npm test                               # engine unit tests
 node scripts/smoke-api.mjs             # API checks against :8787
 npx playwright test                    # full parent + child journey on a phone-sized browser
 npm run test:reset-limits              # clears local login rate limits if back-to-back runs trip them
+curl "http://127.0.0.1:8787/cdn-cgi/handler/scheduled?cron=17+3+*+*+*"   # runs the nightly clean-up now
 ```
 
 Development-only previews (dev server only): `/dev/guide?a=7&b=8` (add `&missing=a&intro=1` for a missing-number guide), `/dev/turnaround?a=3&b=7`, `/dev/lesson?id=groups`, `/dev/words?n=56&lang=ar&digits=eastern`.
@@ -48,7 +55,7 @@ Text lives in [src/locales](src/locales) (`en.json`, `ar.json`); a unit test che
 npx wrangler login
 npx wrangler d1 create ashra-db        # put the id in wrangler.jsonc
 npm run db:migrate:remote
-npx wrangler secret put INVITE_CODE
+npx wrangler secret put TURNSTILE_SECRET # from a Turnstile widget for your domain; its site key goes in wrangler.jsonc
 npm run deploy
 ```
 
@@ -62,4 +69,4 @@ npx wrangler secret put RESEND_API_KEY
 npx wrangler secret put EMAIL_FROM        # e.g. Ashra <noreply@your-domain>
 ```
 
-Never set `EMAIL_LOG_LINKS` on the live Worker.
+Never set `EMAIL_LOG_LINKS` or `DEV_NO_SIGNUP_LIMITS` on the live Worker (both are ignored over https anyway).

@@ -751,7 +751,7 @@ label.field {
 /* ---------------------------------------------------------------- pickers */
 .avatar-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -761,6 +761,8 @@ label.field {
   border: 2px solid transparent;
   background: var(--surface-2);
   font-size: 1.7rem;
+  min-width: 0;
+  padding: 0;
 }
 
 .avatar-grid button[aria-pressed='true'] {
@@ -1826,4 +1828,39 @@ table.simple th {
   padding: 6px 12px;
   font-size: 0.9rem;
   border-radius: 10px;
+}
+
+/* ---------------------------------------------------------------- front door */
+.door-brand {
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  margin: 24px 0 8px;
+}
+
+.age-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.age-grid .btn {
+  min-height: 64px;
+  font-size: 1.4rem;
+  padding: 8px 4px;
+}
+
+.age-grid .btn[aria-pressed='true'] {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Turnstile shows a checkbox here only when it can't tell on its own. */
+.turnstile {
+  display: flex;
+  justify-content: center;
+}
+
+.turnstile:empty {
+  display: none;
 }
