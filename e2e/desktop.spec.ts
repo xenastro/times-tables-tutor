@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './quiet';
 
 const INVITE = process.env.INVITE_CODE ?? 'family-test';
 const SHOTS = process.env.SHOTS_DIR ?? 'e2e-results/shots';

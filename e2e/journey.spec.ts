@@ -1,4 +1,5 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from './quiet';
+import type { Page } from '@playwright/test';
 import { readQuestion, solveExpr, tapNumber, type AskedQuestion } from './helpers';
 
 const INVITE = process.env.INVITE_CODE ?? 'family-test';

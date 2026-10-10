@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { arabicWords } from './arabic';
-import { allClips, bilingualClips, clipSsml, clipText, exprKey, questionKey } from './arabicSpeech';
+import { allClips, bilingualClips, clipSsml, clipText, exprKey, hasTens, questionKey } from './arabicSpeech';
 
 describe('Arabic clips', () => {
   it('says a number on its own in the nominative', () => {
@@ -32,14 +32,12 @@ describe('Arabic clips', () => {
     expect(clipText(questionKey({ a: 7, b: 8, form: 'missing', missing: 'b' }))).toBe('سبعة ضرب كم، والناتج ستة وخمسون؟');
   });
 
-  it('has other ways to write the tens, to pin the Fus-ha ending', () => {
-    expect(clipSsml('n144')).toBe('مِئَة وَأَرْبَعَة وَأَرْبَعُون');
-    expect(clipSsml('n144', 'vowelled')).toBe('مِئَة وَأَرْبَعَة وَأَرْبَعُونَ');
-    expect(clipSsml('n144', 'ipa')).toBe('مِئَة وَأَرْبَعَة وَ<phoneme alphabet="ipa" ph="ʔarbaʕuːn">أَرْبَعُون</phoneme>');
-    expect(clipSsml('n40', 'stopped')).toBe('أَرْبَعُونْ');
-    expect(clipSsml('t7x8', 'vowelled')).toBe(clipSsml('t7x8'));
-    expect(clipSsml('gx7_56', 'full')).toBe('كَمْ ضَرْب سَبْعَة، وَالنَّاتِج سِتَّةٌ وَخَمْسُونَ؟');
-    expect(clipSsml('h120', 'full')).toBe('نِصْف المِئَةِ وَالعِشْرِينَ');
+  it('pins each tens ending with a sukun for the voice', () => {
+    expect(clipSsml('n144')).toBe('مِئَة وَأَرْبَعَة وَأَرْبَعُونْ');
+    expect(clipSsml('gy9_45')).toBe('تِسْعَة ضَرْب كَمْ، وَالنَّاتِج خَمْسَة وَأَرْبَعُونْ؟');
+    expect(clipSsml('t7x8')).toBe('سَبْعَة ضَرْب ثَمَانِيَة');
+    expect(hasTens('n56')).toBe(true);
+    expect(hasTens('n13')).toBe(false);
   });
 
   it('covers every question and answer, and every sum in the guides and lessons', () => {

@@ -1,4 +1,5 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from './quiet';
+import type { Page } from '@playwright/test';
 import { linkPhone, newLearner, SHOTS } from './helpers';
 
 /** A pretend speech engine that records what it was asked to say. */

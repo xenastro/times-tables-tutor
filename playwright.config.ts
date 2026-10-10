@@ -9,5 +9,7 @@ export default defineConfig({
     baseURL: process.env.BASE_URL ?? 'http://127.0.0.1:5173',
     ...devices['Pixel 7'],
     actionTimeout: 10_000,
+    // Read-aloud would otherwise speak through the computer's speakers while tests run.
+    launchOptions: { args: ['--mute-audio'] },
   },
 });

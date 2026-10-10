@@ -1,4 +1,5 @@
-import { expect, test, type APIRequestContext, type Browser } from '@playwright/test';
+import { expect, test } from './quiet';
+import { type APIRequestContext, type Browser } from '@playwright/test';
 import { completeGuide, INVITE, linkPhone, newLearner, padReady, readQuestion, SHOTS, solveExpr } from './helpers';
 
 /** Creates a parent + child through the API and returns a linked phone page. */

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './quiet';
 import { INVITE, SHOTS } from './helpers';
 
 const W = 360;

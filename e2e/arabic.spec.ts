@@ -1,4 +1,5 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from './quiet';
+import type { Page } from '@playwright/test';
 import { completeGuide, linkPhone, newLearner, padReady, readQuestion, seedFluentCheckup, SHOTS, tapNumber } from './helpers';
 
 const W = 360;
