@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-const EVENT = 'app:navigate';
+export const NAVIGATE_EVENT = 'app:navigate';
 
 /** Minimal history-based routing, so the Android back button works as expected. */
 export function useRoute(): string {
@@ -8,10 +8,10 @@ export function useRoute(): string {
   useEffect(() => {
     const update = () => setPath(window.location.pathname);
     window.addEventListener('popstate', update);
-    window.addEventListener(EVENT, update);
+    window.addEventListener(NAVIGATE_EVENT, update);
     return () => {
       window.removeEventListener('popstate', update);
-      window.removeEventListener(EVENT, update);
+      window.removeEventListener(NAVIGATE_EVENT, update);
     };
   }, []);
   return path;
@@ -21,7 +21,7 @@ export function navigate(to: string, opts: { replace?: boolean } = {}) {
   if (to === window.location.pathname) return;
   if (opts.replace) window.history.replaceState({}, '', to);
   else window.history.pushState({}, '', to);
-  window.dispatchEvent(new Event(EVENT));
+  window.dispatchEvent(new Event(NAVIGATE_EVENT));
   window.scrollTo(0, 0);
 }
 

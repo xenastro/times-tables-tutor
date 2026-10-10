@@ -1,20 +1,17 @@
 import { useMemo, useState } from 'react';
-import { useRegisterSW } from 'virtual:pwa-register/react';
 import { FactMap } from '../components/FactMap';
 import { LESSONS, nextLesson } from '../engine/lessons';
 import { DAY, fluentCount, activeFacts } from '../engine/mastery';
 import { dayKey, practisedToday } from '../engine/stats';
 import { n, t } from '../i18n';
 import { navigate } from '../router';
+import { applyUpdate, useUpdateReady } from '../update';
 import { useLearner } from './LearnerContext';
 import { SoundToggle } from './ReadAloud';
 
 export function Home() {
   const { learner, state, events, syncStatus, settings } = useLearner();
-  const {
-    needRefresh: [needRefresh],
-    updateServiceWorker,
-  } = useRegisterSW();
+  const needRefresh = useUpdateReady();
 
   const now = Date.now();
   const total = activeFacts(state).length;
@@ -68,7 +65,7 @@ export function Home() {
       </header>
 
       {needRefresh && (
-        <button className="banner" onClick={() => updateServiceWorker(true)}>
+        <button className="banner" onClick={() => void applyUpdate()}>
           {t('common.updateReady')}
         </button>
       )}

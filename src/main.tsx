@@ -10,6 +10,7 @@ import { setLocale } from './i18n';
 import { ParentApp } from './parent/ParentApp';
 import { Privacy } from './Privacy';
 import { useRoute } from './router';
+import { startUpdates } from './update';
 import './styles.css';
 
 /** Development-only preview of a single guide: /dev/guide?a=7&b=8 (add &missing=a or b, and &intro=1, for ? × 8 = 56). */
@@ -69,6 +70,8 @@ function App() {
   if (path === '/privacy') return <Privacy />;
   return path.startsWith('/parent') ? <ParentApp path={path} /> : <ChildApp path={path} />;
 }
+
+startUpdates();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
