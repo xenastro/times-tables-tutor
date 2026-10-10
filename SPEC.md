@@ -94,6 +94,9 @@ Younger profiles default to read-aloud on, pictures always shown, and only ×10,
 - **Read-aloud** uses the phone's own voice (speechSynthesis): questions and guide steps, plus a 🔊 button. If the phone has no voice, it does nothing. While the question is read, the answer clock waits.
 - **Games** (after the check-up): *Find the pairs* (match six facts to their answers, all face up) and *Fill a row* (fill one row of the map; a miss comes back later, a second miss opens the guide; the finished row lights up +n at a time). No timers, no losing. Game answers don't change fact levels.
 
+### 4.6b Understand path (1.2, younger profile)
+Five short lessons come before the check-up: **equal groups** (plates of apples), **rows** (3 rows of 4, then turned into 4 rows of 3), and **counting in 10s, 2s and 5s** (jumps on a number line). The picture grows one plate, row or jump per step and the child types one number each time; a jump's landing point is labelled only after it's typed. A first slip asks to count again, a second shows the number to type. Lessons stay on the home screen to replay. A young learner who has already started the check-up isn't held back.
+
 ### 4.7 Motivation
 - The fact map is the main reward.
 - The streak is a **forgiving streak**, counted as "5 of the last 7 days" rather than consecutive days, so one missed day doesn't wipe it.
@@ -203,7 +206,7 @@ Younger profiles default to read-aloud on, pictures always shown, and only ×10,
 - read-aloud
 - one or two low-pressure game modes
 
-**1.2:** The full **Understand** path for younger learners: equal groups, arrays and skip-counting lessons before practice.
+**1.2 (built):** The full **Understand** path for younger learners: equal groups, arrays and skip-counting lessons before practice (§4.6b).
 
 **2 — Arabic numbers:**
 - switch between Western and Eastern Arabic numerals (0123 / ٠١٢٣)

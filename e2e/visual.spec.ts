@@ -15,7 +15,8 @@ test('younger learner sees pictures and a short check-up (dark mode)', async ({ 
     'dark',
   );
   await page.screenshot({ path: `${SHOTS}/v01-young-home-dark.png` });
-  await page.getByRole('button', { name: "Let's see what you already know" }).click();
+  // (Younger learners see the Understand lessons first; go straight to the check-up here.)
+  await page.goto('/practice');
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
 
   // Answer everything with "Not sure yet": the check-up should stay short (only ×1, ×10, ×2, ×5, with skips).

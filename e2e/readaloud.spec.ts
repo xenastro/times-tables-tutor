@@ -38,7 +38,7 @@ test('a younger learner hears each question, and can hear it again', async ({ br
   });
   await page.addInitScript(fakeSpeech, true);
   await page.reload();
-  await page.getByRole('button', { name: "Let's see what you already know" }).click();
+  await page.goto('/practice'); // skip the Understand lessons
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
   // The first check-up question is 1 × 4.
   await expect.poll(() => spoken(page)).toContain('1 times 4');
@@ -70,7 +70,7 @@ test('with no voice on the phone, read-aloud quietly does nothing', async ({ bro
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.reload();
-  await page.getByRole('button', { name: "Let's see what you already know" }).click();
+  await page.goto('/practice'); // skip the Understand lessons
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
   await expect(page.locator('.question')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Say it again' })).toHaveCount(0);
