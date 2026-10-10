@@ -628,6 +628,12 @@ app.post('/auth/passkey/login', async (c) => {
 /* ---------------------------------------------------------------- password reset & account deletion */
 
 const RESET_MINUTES = 60;
+/**
+ * Email costs nothing within the account's 3,000 a month (shared with any other app on the
+ * account). These caps keep Ashra to half of that, and stop anyone flooding one inbox.
+ */
+const EMAILS_PER_ADDRESS_HOUR = 3;
+const EMAILS_PER_DAY = 50;
 
 /**
  * Local development only: the reset link comes back in the response (there's no mailbox to read).
@@ -651,7 +657,13 @@ app.post('/auth/reset-request', async (c) => {
   const enabled = emailConfigured(c.env);
   let devLink: string | undefined;
   const row = await c.env.DB.prepare('SELECT id FROM parents WHERE email = ?').bind(email).first<{ id: string }>();
-  if (row) {
+  // Hashed: the limits table shouldn't hold email addresses.
+  const addressBucket = `email:${await sha256(email)}`;
+  const capped =
+    enabled && ((await limited(c, addressBucket, EMAILS_PER_ADDRESS_HOUR, HOUR)) || (await limited(c, 'email', EMAILS_PER_DAY, DAY)));
+  // Over a cap, nothing is sent but the answer looks the same.
+  if (row && !capped) {
+    if (enabled) await hit(c, addressBucket, 'email');
     const token = randomToken();
     await c.env.DB.batch([
       c.env.DB.prepare('DELETE FROM password_resets WHERE parent_id = ? OR expires_at < ?').bind(row.id, Date.now()),
@@ -664,8 +676,10 @@ app.post('/auth/reset-request', async (c) => {
     const link = `${new URL(c.req.url).origin}/parent/reset?token=${token}`;
     await sendEmail(c.env, {
       to: email,
-      subject: 'Reset your Ashra password',
-      text: `Someone asked to reset the password for this email on Ashra.\n\nTo choose a new password, open this link within ${RESET_MINUTES} minutes:\n${link}\n\nIf it wasn't you, you can ignore this email.`,
+      subject: 'Reset your Ashra password · إعادة تعيين كلمة مرور عشرة',
+      text:
+        `Someone asked to reset the password for this email on Ashra.\n\nTo choose a new password, open this link within ${RESET_MINUTES} minutes:\n${link}\n\nIf it wasn't you, you can ignore this email.\n\n— — —\n\n` +
+        `طلب أحدهم إعادة تعيين كلمة المرور لهذا البريد في عشرة.\n\nلاختيار كلمة مرور جديدة، افتح هذا الرابط خلال ${RESET_MINUTES} دقيقة:\n${link}\n\nإن لم تكن أنت، يمكنك تجاهل هذه الرسالة.`,
     });
     if (devLinks(c)) devLink = link;
   }

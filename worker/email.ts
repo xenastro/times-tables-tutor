@@ -1,17 +1,20 @@
 /**
- * Sending email, kept pluggable: no provider is wired in by default, and nothing here creates
- * an account anywhere. To turn on password-reset emails, set Worker secrets for one provider:
+ * Sending email, kept pluggable. The live site uses Cloudflare Email Service through the
+ * `EMAIL` binding (wrangler.jsonc), sending from noreply@ashra.aburaddad.com:
  *
- *   EMAIL_PROVIDER=resend      RESEND_API_KEY=...   EMAIL_FROM="Ashra <noreply@your-domain>"
+ *   EMAIL_PROVIDER=cloudflare  EMAIL_FROM=noreply@ashra.aburaddad.com   (Worker vars)
  *
- * (Any HTTP email API can be added as another case below.) With no provider, `sendEmail`
- * returns false and, when EMAIL_LOG_LINKS=1 (local development only), logs the message instead.
+ * Resend also works: EMAIL_PROVIDER=resend, RESEND_API_KEY=..., EMAIL_FROM="Ashra <noreply@…>".
+ * With no provider, `sendEmail` returns false and, when EMAIL_LOG_LINKS=1 (local development
+ * only), logs the message instead.
  */
 
 export interface EmailEnv {
   EMAIL_PROVIDER?: string;
   RESEND_API_KEY?: string;
   EMAIL_FROM?: string;
+  /** Cloudflare Email Service. */
+  EMAIL?: SendEmail;
   /**
    * Development only (.dev.vars): print emails to the Worker log, and return reset links to the
    * local test scripts. Never set this on the live Worker.
@@ -26,11 +29,21 @@ export interface EmailMessage {
 }
 
 export function emailConfigured(env: EmailEnv): boolean {
+  if (env.EMAIL_PROVIDER === 'cloudflare') return !!env.EMAIL && !!env.EMAIL_FROM;
   return env.EMAIL_PROVIDER === 'resend' && !!env.RESEND_API_KEY && !!env.EMAIL_FROM;
 }
 
 /** Returns true if the message was handed to a provider. */
 export async function sendEmail(env: EmailEnv, msg: EmailMessage): Promise<boolean> {
+  if (env.EMAIL_PROVIDER === 'cloudflare' && env.EMAIL && env.EMAIL_FROM) {
+    try {
+      await env.EMAIL.send({ from: { name: 'Ashra', email: env.EMAIL_FROM }, to: msg.to, subject: msg.subject, text: msg.text });
+      return true;
+    } catch (err) {
+      console.error('email failed', err);
+      return false;
+    }
+  }
   if (env.EMAIL_PROVIDER === 'resend' && env.RESEND_API_KEY && env.EMAIL_FROM) {
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',

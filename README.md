@@ -27,6 +27,7 @@ EMAIL_LOG_LINKS=1
 DEV_NO_SIGNUP_LIMITS=1
 RP_ID=localhost
 ORIGINS=http://localhost:5173,http://localhost:8787
+EMAIL_PROVIDER=log
 VARS
 npm run build          # the Worker serves ./dist
 npm run dev:api        # Worker + local D1 on :8787
@@ -59,14 +60,8 @@ npx wrangler secret put TURNSTILE_SECRET # from a Turnstile widget for your doma
 npm run deploy
 ```
 
-### Password-reset email (optional)
+### Password-reset email
 
-No email service is set up, so "Forgot password?" says it can't send emails. To turn it on, create an account with an email API (the code supports [Resend](https://resend.com) out of the box; see [worker/email.ts](worker/email.ts) to add another), verify your sending domain there, then:
-
-```sh
-npx wrangler secret put EMAIL_PROVIDER    # resend
-npx wrangler secret put RESEND_API_KEY
-npx wrangler secret put EMAIL_FROM        # e.g. Ashra <noreply@your-domain>
-```
+The live site sends through Cloudflare Email Service (needs the Workers Paid plan; 3,000 emails a month per account are included). `ashra.aburaddad.com` is onboarded as a sending subdomain, and wrangler.jsonc has the `EMAIL` binding plus `EMAIL_PROVIDER=cloudflare` and `EMAIL_FROM`. Ashra caps itself at 3 emails per address per hour and 50 a day. Locally `.dev.vars` sets `EMAIL_PROVIDER=log`, so nothing is sent and the reset link appears on screen. [Resend](https://resend.com) also works (`EMAIL_PROVIDER=resend`, secret `RESEND_API_KEY`); see [worker/email.ts](worker/email.ts).
 
 Never set `EMAIL_LOG_LINKS` or `DEV_NO_SIGNUP_LIMITS` on the live Worker (both are ignored over https anyway).

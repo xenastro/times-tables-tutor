@@ -182,7 +182,7 @@ Five short lessons come before the check-up: **equal groups** (plates of apples)
 - **Retention:** a nightly job deletes children with no parent who never practised (after 7 days) or haven't practised for a year, plus expired sessions, codes and challenges.
 - **Data about children is kept to a minimum:** avatar, colour, settings and practice events; a first name or nickname and birth year only if a parent adds them. No analytics or third-party trackers. Under COPPA, the device token is a persistent identifier used only for internal operations (keeping the child signed in and their practice), which the privacy page states.
 - **Built for opening to other families (release 3):**
-  - **Password reset:** "Forgot password?" sends a one-time link that works for 60 minutes (only a hash is stored; the same reply whether or not the email has an account; rate-limited). Sending is pluggable ([worker/email.ts](worker/email.ts)); until a provider is configured the page says no email could be sent.
+  - **Password reset:** "Forgot password?" sends a one-time link that works for 60 minutes (only a hash is stored; the same reply whether or not the email has an account; rate-limited). Sent through Cloudflare Email Service from noreply@ashra.aburaddad.com, in English and Arabic ([worker/email.ts](worker/email.ts)). At most 3 emails per address per hour and 50 a day, keeping Ashra within half the account's free 3,000 a month; over a cap nothing is sent and the reply is the same.
   - **Account deletion:** "Delete my account" (password + typing DELETE) removes the parent, every child, all events and phones at once.
   - **Privacy page** at `/privacy`, linked from the welcome screen, sign-in and the parent area, in English and Arabic.
 
@@ -232,7 +232,7 @@ Five short lessons come before the check-up: **equal groups** (plates of apples)
 - bilingual mode: hear the question in Arabic, answer in digits
 
 **3:**
-- opening to other families (password reset, deletion, privacy page): **built** (§7); email sending needs a provider (Cloudflare's own sending needs the Workers Paid plan)
+- opening to other families (password reset, deletion, privacy page): **built** (§7); email sends through Cloudflare Email Service
 - onboarding: children start alone, parents connect later, one phone for both, open sign-up with bot limits, passkeys for parents: **built** (§7)
 - further IGCSE topics on the same engine: **proposal** in [docs/next-topics.md](docs/next-topics.md)
 
