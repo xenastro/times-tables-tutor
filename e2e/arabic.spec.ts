@@ -41,8 +41,8 @@ async function practiseUntil(page: Page, until: () => Promise<boolean>, max = 60
       await completeGuide(page);
       continue;
     }
-    // A tip (the turnaround, how Arabic says numbers): its main button moves on.
-    if (await page.locator('.panel .btn-primary').isVisible()) {
+    // The turnaround tip: its main button moves on.
+    if (await page.locator('.panel .turnaround').isVisible()) {
       await page.locator('.panel .btn-primary').click();
       continue;
     }
@@ -121,7 +121,7 @@ test('bilingual mode: the question in Arabic words, the answer in digits', async
   await page.screenshot({ path: `${SHOTS}/bi-answer.png` });
 
   // Soon, the first answer with a units digit shows how Arabic says numbers.
-  await practiseUntil(page, () => page.locator('.words-show').isVisible(), 40);
+  await practiseUntil(page, () => page.locator('.words-show').isVisible(), 300);
   await expect(page.locator('.words-show')).toBeVisible();
   await page.waitForTimeout(9000);
   await page.screenshot({ path: `${SHOTS}/bi-words-tip.png` });

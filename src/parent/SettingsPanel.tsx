@@ -125,8 +125,9 @@ export function SettingsPanel({ learner, onSaved }: { learner: LearnerDTO; onSav
         value={s.numerals}
         onChange={(v) => set('numerals', v)}
         options={[
-          { value: 'western', label: '0 1 2 3' },
-          { value: 'eastern', label: '٠ ١ ٢ ٣' },
+          // Wrapped in invisible left-to-right isolates (U+2066…U+2069) so an Arabic page doesn't show "3 2 1 0".
+          { value: 'western', label: '⁦0 1 2 3⁩' },
+          { value: 'eastern', label: '⁦٠ ١ ٢ ٣⁩' },
         ]}
       />
       <Choice

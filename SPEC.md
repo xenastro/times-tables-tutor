@@ -97,6 +97,12 @@ Younger profiles default to read-aloud on, pictures always shown, and only ×10,
 ### 4.6b Understand path (1.2, younger profile)
 Five short lessons come before the check-up: **equal groups** (plates of apples), **rows** (3 rows of 4, then turned into 4 rows of 3), and **counting in 10s, 2s and 5s** (jumps on a number line). The picture grows one plate, row or jump per step and the child types one number each time; a jump's landing point is labelled only after it's typed. A first slip asks to count again, a second shows the number to type. Lessons stay on the home screen to replay. A young learner who has already started the check-up isn't held back.
 
+### 4.6c Arabic (release 2)
+- **Language** (per child: English / العربية) and **digits** (0123 / ٠١٢٣) are separate settings. Arabic turns screens right to left; sums, the number pad and the shorts stay left to right, as in IGCSE textbooks. The parent area has its own language switch.
+- **Number words, units first:** 56 = ستة وخمسون. A short lights the 6, shows ستة, then lights the 5 and shows وخمسون (hundreds come first: مئة وأربعة وأربعون). Shown the first time in bilingual mode, and from the fact map.
+- **Bilingual mode** (per child): practice questions appear and are heard in Arabic words (سبعة ضرب ثمانية); the child answers in digits, then sees and hears the answer's words. 2.5 s extra is allowed before an answer counts as slow. Check-up and missing-number puzzles stay in digits.
+- **The parent's voice:** the parent records 30 short clips (1–19, 20–90, مئة, و, ضرب) on the parent page; together they say any answer up to 144. Stored in D1 (≤64 KB each), cached on the child's phone for offline use. Order of preference: the parent's clips, then the phone's Arabic voice, then words only.
+
 ### 4.7 Motivation
 - The fact map is the main reward.
 - The streak is a **forgiving streak**, counted as "5 of the last 7 days" rather than consecutive days, so one missed day doesn't wipe it.
@@ -179,7 +185,7 @@ Five short lessons come before the check-up: **equal groups** (plates of apples)
 | Database | Cloudflare D1 |
 | Tests | Vitest, covering the learning engine: scheduling, mastery and session building |
 | Hosting | Cloudflare Workers free tier at `math.aburaddad.com`; DNS is set up automatically on deploy |
-| i18n | All text in `locales/en.json`; layout uses CSS logical properties so it's ready for right-to-left (Arabic) |
+| i18n | All text in `src/locales/en.json` and `ar.json`; Arabic is right to left (CSS logical properties), sums stay left to right |
 
 **Android setup:**
 - Install from Chrome with "Add to Home screen".
@@ -208,7 +214,7 @@ Five short lessons come before the check-up: **equal groups** (plates of apples)
 
 **1.2 (built):** The full **Understand** path for younger learners: equal groups, arrays and skip-counting lessons before practice (§4.6b).
 
-**2 — Arabic numbers:**
+**2 — Arabic numbers (built, §4.6c):**
 - switch between Western and Eastern Arabic numerals (0123 / ٠١٢٣)
 - Arabic number words, including units-first reading (56 is *ستة وخمسون*)
 - the parent records audio of the numbers in their own voice from the dashboard
