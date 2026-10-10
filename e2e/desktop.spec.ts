@@ -15,6 +15,7 @@ test('parent fact details open as a centred dialog that fits a laptop screen', a
   await page.locator('.factmap button').nth(8 * 10 + 6).click();
   const sheet = page.locator('.sheet');
   await expect(sheet).toBeVisible();
+  await page.waitForTimeout(500); // let the dialog's rise animation finish
   const box = (await sheet.boundingBox())!;
   expect(box.y).toBeGreaterThan(0);
   expect(box.y + box.height).toBeLessThanOrEqual(800);
