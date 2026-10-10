@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { arabicClips, arabicParts, arabicWords } from '../engine/arabic';
 import { n as num, t } from '../i18n';
-import { PLAYBACK_SLOWDOWN } from './TrickShow';
+import { PLAYBACK_SLOWDOWN, PlaybackButton, usePlayback } from './Playback';
 
 /**
  * "56 is ستة وخمسون": the digits light up in the order Arabic says them (the ones first,
@@ -13,19 +13,14 @@ export function NumberWordsShow({ n, say }: { n: number; say?: (clips: string[],
   const digits = String(n).split('');
   // Frame 0: just the number. Frames 1..k: one more word each. Last frame: the whole reading.
   const last = parts.length + 1;
-  const [frame, setFrame] = useState(0);
-  const [run, setRun] = useState(0);
+  const playback = usePlayback(last, (i) => (i === 0 ? 1200 : 1500) * PLAYBACK_SLOWDOWN);
+  const { frame, finished } = playback;
 
+  // The whole reading is said aloud each time the short reaches the end.
   useEffect(() => {
-    if (frame === last) {
-      say?.(arabicClips(n), words);
-      return;
-    }
-    const ms = (frame === 0 ? 1200 : 1500) * PLAYBACK_SLOWDOWN;
-    const id = window.setTimeout(() => setFrame((f) => f + 1), ms);
-    return () => window.clearTimeout(id);
+    if (finished) say?.(arabicClips(n), words);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [frame, last, run]);
+  }, [finished]);
 
   const shown = Math.min(frame, parts.length);
   const active = frame >= 1 && frame <= parts.length ? parts[frame - 1] : null;
@@ -59,16 +54,7 @@ export function NumberWordsShow({ n, say }: { n: number; say?: (clips: string[],
       <p className="trick-caption" aria-live="polite">
         {caption}
       </p>
-      <button
-        className="btn btn-soft"
-        style={{ visibility: frame === last ? 'visible' : 'hidden' }}
-        onClick={() => {
-          setFrame(0);
-          setRun((r) => r + 1);
-        }}
-      >
-        ↻ {t('trick.again')}
-      </button>
+      <PlaybackButton playback={playback} />
     </div>
   );
 }

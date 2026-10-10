@@ -280,6 +280,8 @@
       "turn": "…and 8 × 7 is the same!"
     },
     "again": "Watch again",
+    "pause": "Pause",
+    "play": "Play",
     "ten": {
       "move": "The {n} moves up one place…",
       "zero": "…and a 0 fills the gap.",

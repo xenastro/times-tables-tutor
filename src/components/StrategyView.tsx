@@ -88,7 +88,8 @@ export function NoteView({
   missing?: 'a' | 'b';
 }) {
   const show = trickFor(note, a, b, missing);
-  if (show) return <TrickShow show={show} />;
+  // Keyed so a different trick starts from its first frame.
+  if (show) return <TrickShow key={`${note}-${a}-${b}-${missing}`} show={show} />;
   return <p className="guide-note">{t(`guide.${note}`, vars)}</p>;
 }
 

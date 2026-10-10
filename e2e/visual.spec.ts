@@ -175,6 +175,29 @@ test('turnaround short rotates 3 rows of 7 into 7 rows of 3 and fits the screen'
   }
 });
 
+test('a short can be paused to read, then played on from where it stopped', async ({ browser, baseURL }) => {
+  test.skip(!baseURL?.includes('5173'), 'the preview page only exists in the dev server');
+  const page = await (await browser.newContext({ viewport: { width: 360, height: 740 } })).newPage();
+  await page.goto('/dev/turnaround?a=3&b=7');
+  await expect(page.locator('.turnaround-caption')).toHaveText('3 rows of 7');
+  // One button at a time: Pause while playing.
+  await expect(page.getByRole('button', { name: 'Play' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Pause' }).click();
+  await expect(page.getByRole('button', { name: 'Pause' })).toHaveCount(0);
+  await page.locator('.turnaround').screenshot({ path: `${SHOTS}/ta-paused.png` });
+  // The first frame lasts 3.2 s; paused, it stays put well past that.
+  await page.waitForTimeout(5000);
+  await expect(page.locator('.turnaround-caption')).toHaveText('3 rows of 7');
+  await page.getByRole('button', { name: 'Play' }).click();
+  await expect(page.locator('.turnaround-caption')).toHaveText('7 rows of 3', { timeout: 10_000 });
+  await expect(page.locator('.turnaround-caption')).toHaveText('Same blocks, same answer!', { timeout: 10_000 });
+  // At the end the same spot offers Watch again.
+  await expect(page.getByRole('button', { name: /Watch again/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^(Play|Pause)$/ })).toHaveCount(0);
+  const box = (await page.getByRole('button', { name: /Watch again/ }).boundingBox())!;
+  expect(box.x + box.width).toBeLessThanOrEqual(360);
+});
+
 test('fact map numbers are large enough to read on a small phone', async ({ browser, playwright, baseURL }) => {
   const request = await playwright.request.newContext({ baseURL });
   await request.post('/api/auth/signup', {

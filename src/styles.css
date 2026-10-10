@@ -1285,6 +1285,11 @@ table.simple th {
   text-wrap: balance;
 }
 
+/* Pause / Play / Watch again share one spot, so the button keeps its width as its label changes. */
+.playback-btn {
+  min-width: 10.5em;
+}
+
 /* The fact map gets the full width of a phone. */
 @media (max-width: 480px) {
   .card.map-card {

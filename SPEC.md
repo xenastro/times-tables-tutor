@@ -87,6 +87,7 @@ Younger profiles default to read-aloud on, pictures always shown, and only ×10,
 - **Animated shorts.** 7 × 8 ("5, 6, 7, 8", ending with 8 × 7 when asked that way), ×10 (the digits move up a place), ×11 (the digit is copied) and ×9 (one less, digits add to 9). A short plays only after the learner has worked out the answer, and can be replayed.
 - **Turnaround tip.** The first time a learner answers a fact correctly the other way round (both factors 2 or more and clearly different, like 3 × 7 after 7 × 3), a short turns 3 rows of 7 into 7 rows of 3. Shown once; also available from the fact map.
 - **Half speed.** Every animation is designed at 1× and played at half speed. Motion is used only where it explains something.
+- **Pause and play.** Every short has one button under it: Pause while it plays (the current frame stays on screen for as long as the child needs to read it), Play while paused (it carries on from where it stopped), and Watch again at the end.
 - **Answers are never given away early,** and a hinted or guided answer never counts as fluent.
 
 ### 4.6a Missing numbers, read-aloud and games (1.1)

@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { n, t } from '../i18n';
+import { PlaybackButton, usePlayback } from './Playback';
 
 /**
  * "Turn it around": a rows of b blocks rotate a quarter turn into b rows of a.
@@ -14,16 +15,8 @@ const FRAMES = [
 ] as const;
 
 export function TurnaroundShow({ a, b }: { a: number; b: number }) {
-  const [frame, setFrame] = useState(0);
-  const [run, setRun] = useState(0);
-  const last = FRAMES.length - 1;
-  const f = FRAMES[frame];
-
-  useEffect(() => {
-    if (frame === last) return;
-    const id = window.setTimeout(() => setFrame((i) => i + 1), FRAMES[frame].ms);
-    return () => window.clearTimeout(id);
-  }, [frame, last, run]);
+  const playback = usePlayback(FRAMES.length - 1, (i) => FRAMES[i].ms);
+  const f = FRAMES[playback.frame];
 
   const p = a * b;
   const big = Math.max(a, b);
@@ -56,16 +49,7 @@ export function TurnaroundShow({ a, b }: { a: number; b: number }) {
       <p className="turnaround-eq num" dir="ltr">
         {n(eq)}
       </p>
-      <button
-        className="btn btn-soft"
-        style={{ visibility: frame === last ? 'visible' : 'hidden' }}
-        onClick={() => {
-          setFrame(0);
-          setRun((r) => r + 1);
-        }}
-      >
-        ↻ {t('trick.again')}
-      </button>
+      <PlaybackButton playback={playback} />
     </div>
   );
 }

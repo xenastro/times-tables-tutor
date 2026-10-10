@@ -1,24 +1,11 @@
-import { useEffect, useState } from 'react';
 import type { TrickShow as Show } from '../engine/tricks';
 import { n, t } from '../i18n';
+import { PLAYBACK_SLOWDOWN, PlaybackButton, usePlayback } from './Playback';
 
-/** Frame timings are designed at 1×; children follow better at half speed. Keep in step with the CSS transitions. */
-export const PLAYBACK_SLOWDOWN = 2;
-
-/** Plays a token animation once, then offers "Watch again". */
+/** Plays a token animation once (the child can pause it to read), then offers "Watch again". */
 export function TrickShow({ show }: { show: Show }) {
-  const last = show.frames.length - 1;
-  const [frame, setFrame] = useState(0);
-  const [run, setRun] = useState(0);
-  const finished = frame === last;
-
-  useEffect(() => {
-    if (finished) return;
-    const id = window.setTimeout(() => setFrame((f) => f + 1), show.frames[frame].ms * PLAYBACK_SLOWDOWN);
-    return () => window.clearTimeout(id);
-  }, [frame, finished, run, show]);
-
-  const f = show.frames[frame];
+  const playback = usePlayback(show.frames.length - 1, (i) => show.frames[i].ms * PLAYBACK_SLOWDOWN);
+  const f = show.frames[playback.frame];
   return (
     <div className="trick" role="img" aria-label={t(show.summary, show.summaryVars)}>
       <div
@@ -56,16 +43,7 @@ export function TrickShow({ show }: { show: Show }) {
       <p className="trick-caption" aria-live="polite">
         {f.caption ? t(f.caption, f.captionVars) : ' '}
       </p>
-      <button
-        className="btn btn-soft"
-        style={{ visibility: finished ? 'visible' : 'hidden' }}
-        onClick={() => {
-          setFrame(0);
-          setRun((r) => r + 1);
-        }}
-      >
-        ↻ {t('trick.again')}
-      </button>
+      <PlaybackButton playback={playback} />
     </div>
   );
 }
