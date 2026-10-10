@@ -116,6 +116,8 @@ export interface SessionRow {
   answered: number;
   correct: number;
   durationMs: number;
+  game?: string;
+  table?: number;
 }
 
 export function sessionHistory(events: TutorEvent[], limit = 10): SessionRow[] {
@@ -125,6 +127,15 @@ export function sessionHistory(events: TutorEvent[], limit = 10): SessionRow[] {
     .slice(0, limit)
     .map((e) => {
       const p = e.payload as SessionEndPayload;
-      return { sessionId: p.sessionId, ts: e.ts, kind: p.kind, answered: p.answered, correct: p.correct, durationMs: p.durationMs };
+      return {
+        sessionId: p.sessionId,
+        ts: e.ts,
+        kind: p.kind,
+        answered: p.answered,
+        correct: p.correct,
+        durationMs: p.durationMs,
+        game: p.game,
+        table: p.table,
+      };
     });
 }

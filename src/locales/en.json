@@ -149,6 +149,8 @@
     "sessionsNone": "No sessions yet.",
     "sessionCheckup": "Check-up",
     "sessionPractice": "Practice",
+    "sessionPairs": "Game: pairs",
+    "sessionRow": "Game: ×{n} row",
     "linkPhone": "Link a phone",
     "linkSteps": "On your child's phone, open {url} in Chrome and enter this code:",
     "linkExpires": "Code expires in {m} min.",
@@ -274,6 +276,25 @@
       "done": "So {a} × {b} = {p}",
       "summary": "9 × {n} = {p}: {tens} is one less than {n}, and {tens} + {ones} = 9."
     }
+  },
+  "games": {
+    "title": "Games",
+    "pairs": "Find the pairs",
+    "pairsTitle": "Find the pairs",
+    "pairsHow": "Tap a sum, then its answer.",
+    "pairsNope": "Not those two. Try another!",
+    "pairsFound": "{n} of {total} pairs found",
+    "pairsDone": "You found them all!",
+    "again": "Play again",
+    "row": "Fill a row",
+    "rowTitle": "Fill a row",
+    "rowPick": "Pick a row of your map to fill in.",
+    "rowChoice": "The ×{n} row",
+    "rowPlaying": "The ×{n} row",
+    "rowNotYet": "Not yet. It'll come back.",
+    "rowDone": "You filled the ×{n} row!",
+    "rowPattern": "Look: each answer is {n} more than the one before.",
+    "rowAnother": "Fill another row"
   },
   "speech": {
     "times": "{x} times {y}",

@@ -66,6 +66,9 @@ export interface SessionEndPayload {
   answered: number;
   correct: number;
   durationMs: number;
+  /** For games: which one ("pairs", "row") and, for a row, its table. */
+  game?: string;
+  table?: number;
 }
 
 export type Feeling = 'calm' | 'ok' | 'hard';

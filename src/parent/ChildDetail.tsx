@@ -258,7 +258,15 @@ export function ChildDetail({ id }: { id: string }) {
               {sessions.map((s) => (
                 <tr key={s.sessionId}>
                   <td>{shortDateTime(s.ts)}</td>
-                  <td>{s.kind === 'checkup' ? t('parent.sessionCheckup') : t('parent.sessionPractice')}</td>
+                  <td>
+                    {s.kind === 'checkup'
+                      ? t('parent.sessionCheckup')
+                      : s.kind === 'game'
+                        ? s.game === 'row'
+                          ? t('parent.sessionRow', { n: s.table ?? '' })
+                          : t('parent.sessionPairs')
+                        : t('parent.sessionPractice')}
+                  </td>
                   <td>{s.answered}</td>
                   <td>{s.answered ? `${Math.round((s.correct / s.answered) * 100)}%` : '–'}</td>
                   <td>{(s.durationMs / 60000).toFixed(1)}</td>

@@ -101,6 +101,20 @@ export function Home() {
         </section>
       )}
 
+      {checkup.done && (
+        <section className="stack" style={{ gap: 8 }}>
+          <h2 style={{ fontSize: '1.05rem' }}>{t('games.title')}</h2>
+          <div className="row" style={{ gap: 10, alignItems: 'stretch' }}>
+            <button className="btn btn-soft grow" onClick={() => navigate('/games/pairs')}>
+              🧩 {t('games.pairs')}
+            </button>
+            <button className="btn btn-soft grow" onClick={() => navigate('/games/row')}>
+              🟩 {t('games.row')}
+            </button>
+          </div>
+        </section>
+      )}
+
       <p className="sync" aria-live="polite">
         {syncStatus === 'offline' ? t('common.offline') : syncStatus === 'syncing' ? t('common.syncing') : t('common.synced')}
       </p>

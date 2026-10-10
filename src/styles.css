@@ -1364,3 +1364,179 @@ table.simple th {
   vertical-align: middle;
   margin-inline-start: 6px;
 }
+
+/* ---------------------------------------------------------------- games: find the pairs */
+.pairs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.pair-card {
+  min-height: 72px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--line);
+  background: var(--surface);
+  font-size: 1.35rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  transition: background 0.4s ease, border-color 0.2s ease, opacity 0.6s ease, transform 0.2s ease;
+}
+
+.pair-card.product {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  border-color: transparent;
+}
+
+.pair-card.selected {
+  border-color: var(--accent);
+  transform: scale(1.04);
+}
+
+.pair-card.matched {
+  background: var(--good-soft);
+  color: var(--good);
+  border-color: transparent;
+  opacity: 0.75;
+  animation: pair-pop 0.6s ease 1;
+}
+
+@keyframes pair-pop {
+  40% { transform: scale(1.07); }
+}
+
+.pair-card.matched::before {
+  content: '✓ ';
+}
+
+/* A wrong pair: a gentle wiggle, never red. */
+.pair-card.nope {
+  animation: wiggle 0.8s ease 1;
+}
+
+@keyframes wiggle {
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+}
+
+/* ---------------------------------------------------------------- games: fill a row */
+.row-picker {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.row-choice {
+  min-height: 76px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.row-choice-bar {
+  width: 60%;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--lv0);
+  overflow: hidden;
+}
+
+.row-choice-bar i {
+  display: block;
+  height: 100%;
+  background: var(--lv4);
+}
+
+.row-tiles {
+  display: grid;
+  gap: 6px;
+  padding: 6px 0;
+}
+
+.row-tile {
+  position: relative;
+  aspect-ratio: 1 / 1.05;
+  border-radius: 10px;
+  background: var(--lv0);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  transition: background 0.5s ease;
+}
+
+.row-tile small {
+  font-size: 0.72rem;
+  color: var(--ink-3);
+  font-weight: 600;
+}
+
+.row-tile strong {
+  font-size: 1.15rem;
+  line-height: 1.1;
+  min-height: 1.1em;
+}
+
+.row-tile.current {
+  outline: 3px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.row-tile.filled {
+  background: var(--lv3);
+  color: var(--lv-ink);
+}
+
+.row-tile.filled small {
+  color: var(--lv-ink);
+  opacity: 0.7;
+}
+
+.row-tile.pop {
+  animation: pop 0.6s ease 1;
+}
+
+/* The finished row lights up one tile after another, each "+n" more than the last. */
+.row-tiles.pattern .row-tile {
+  animation: row-light 1.4s ease calc(var(--i) * 1.4s) 1 both;
+}
+
+.row-plus {
+  position: absolute;
+  inset-block-start: -8px;
+  inset-inline-start: -6px;
+  font-style: normal;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  animation: fade-in 0.6s ease calc(var(--i) * 1.4s) both;
+}
+
+@keyframes row-light {
+  0% { background: var(--lv3); }
+  40% { background: var(--lv5); color: var(--lv5-ink); transform: scale(1.08); }
+  100% { background: var(--lv4); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+}
+
+.question-row {
+  font-size: clamp(2.6rem, 14vw, 4rem);
+}
