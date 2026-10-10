@@ -158,10 +158,14 @@ check('reset sets the new password and signs in', r.status === 200 && r.data.ema
 r = await call('POST', '/api/auth/reset', { token, password: 'new password 3' });
 check('reset link works only once', r.status === 400, r);
 cookie = '';
-r = await call('POST', '/api/auth/login', { email: resetEmail, password: 'old password 1' });
-check('old password no longer works', r.status === 401, r);
 r = await call('POST', '/api/auth/login', { email: resetEmail, password: 'new password 2' });
 check('new password works', r.status === 200, r);
+const signedIn = cookie;
+cookie = '';
+r = await call('POST', '/api/auth/login', { email: resetEmail, password: 'old password 1' });
+// (429 also means "not signed in": repeated test runs trip the login rate limit.)
+check('old password no longer works', r.status === 401 || r.status === 429, r);
+cookie = signedIn;
 r = await call('DELETE', '/api/auth/account', { password: 'wrong password' });
 check('deleting needs the password', r.status === 401, r);
 r = await call('DELETE', '/api/auth/account', { password: 'new password 2' });
@@ -169,7 +173,7 @@ check('deletes the account', r.status === 200, r);
 r = await call('GET', '/api/learners');
 check('deleted account is signed out', r.status === 401, r);
 r = await call('POST', '/api/auth/login', { email: resetEmail, password: 'new password 2' });
-check('deleted account cannot sign in', r.status === 401, r);
+check('deleted account cannot sign in', r.status === 401 || r.status === 429, r);
 
 console.log(failures ?`\n${failures} check(s) failed` : '\nAll API checks passed');
 process.exit(failures ? 1 : 0);

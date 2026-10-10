@@ -35,6 +35,7 @@ Open http://localhost:5173/parent to create a parent account (invite code from `
 npm test                               # engine unit tests
 node scripts/smoke-api.mjs             # API checks against :8787
 npx playwright test                    # full parent + child journey on a phone-sized browser
+npm run test:reset-limits              # clears local login rate limits if back-to-back runs trip them
 ```
 
 Development-only previews (dev server only): `/dev/guide?a=7&b=8` (add `&missing=a&intro=1` for a missing-number guide), `/dev/turnaround?a=3&b=7`, `/dev/lesson?id=groups`, `/dev/words?n=56&lang=ar&digits=eastern`.

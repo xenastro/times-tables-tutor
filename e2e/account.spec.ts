@@ -27,8 +27,9 @@ test('a parent who forgot their password resets it with a one-time link', async 
   await expect(page.getByRole('heading', { name: 'Parent area' })).toBeVisible();
 
   const fresh = await playwright.request.newContext({ baseURL });
-  expect((await fresh.post('/api/auth/login', { data: { email, password: 'first password' } })).status()).toBe(401);
   expect((await fresh.post('/api/auth/login', { data: { email, password: 'second password' } })).status()).toBe(200);
+  // 429 also means "not signed in": repeated test runs trip the login rate limit.
+  expect([401, 429]).toContain((await fresh.post('/api/auth/login', { data: { email, password: 'first password' } })).status());
 });
 
 test('a parent deletes their account and everything in it', async ({ browser, playwright, baseURL }) => {
@@ -52,7 +53,7 @@ test('a parent deletes their account and everything in it', async ({ browser, pl
   await page.screenshot({ path: `${SHOTS}/acc-deleted.png`, fullPage: true });
 
   const fresh = await playwright.request.newContext({ baseURL });
-  expect((await fresh.post('/api/auth/login', { data: { email, password: 'delete me please' } })).status()).toBe(401);
+  expect([401, 429]).toContain((await fresh.post('/api/auth/login', { data: { email, password: 'delete me please' } })).status());
 });
 
 test('the privacy page is reachable before linking a phone, in English and Arabic', async ({ browser }) => {

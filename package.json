@@ -13,6 +13,7 @@
     "test": "vitest run",
     "test:api": "node scripts/smoke-api.mjs",
     "test:e2e": "playwright test",
+    "test:reset-limits": "wrangler d1 execute tutor-db --local --command \"DELETE FROM failures\"",
     "icons": "node scripts/make-icons.mjs",
     "deploy": "npm run build && wrangler deploy"
   },
