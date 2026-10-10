@@ -1,7 +1,7 @@
-# Times Tables Tutor — Product Spec
+# Ashra (عشرة) — Product Spec
 
 > **Status:** v0.2 · 2026-10-10 · first release live at math.aburaddad.com
-> **Name:** placeholder. Our first learner will choose the real name after trying the app.
+> **Name:** Ashra (عشرة, "ten"): the base of every number and the last row of the tables. One word that reads easily in English and Arabic.
 
 ## 1. Goal
 

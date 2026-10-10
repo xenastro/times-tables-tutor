@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'prompt',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Times Tables',
-        short_name: 'Times Tables',
+        name: 'Ashra',
+        short_name: 'Ashra',
         description: 'Calm, daily times tables practice.',
         start_url: '/',
         scope: '/',

@@ -1,4 +1,4 @@
-# Times Tables Tutor (working name)
+# Ashra (عشرة)
 
 A phone-first app that helps children build calm, lasting fluency with the multiplication tables, with a parent dashboard for tracking progress.
 
@@ -59,7 +59,7 @@ No email service is set up, so "Forgot password?" says it can't send emails. To 
 ```sh
 npx wrangler secret put EMAIL_PROVIDER    # resend
 npx wrangler secret put RESEND_API_KEY
-npx wrangler secret put EMAIL_FROM        # e.g. Times Tables <noreply@your-domain>
+npx wrangler secret put EMAIL_FROM        # e.g. Ashra <noreply@your-domain>
 ```
 
 Never set `EMAIL_LOG_LINKS` on the live Worker.

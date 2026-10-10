@@ -2,7 +2,7 @@
  * Sending email, kept pluggable: no provider is wired in by default, and nothing here creates
  * an account anywhere. To turn on password-reset emails, set Worker secrets for one provider:
  *
- *   EMAIL_PROVIDER=resend      RESEND_API_KEY=...   EMAIL_FROM="Times Tables <noreply@your-domain>"
+ *   EMAIL_PROVIDER=resend      RESEND_API_KEY=...   EMAIL_FROM="Ashra <noreply@your-domain>"
  *
  * (Any HTTP email API can be added as another case below.) With no provider, `sendEmail`
  * returns false and, when EMAIL_LOG_LINKS=1 (local development only), logs the message instead.

@@ -243,8 +243,8 @@ app.post('/auth/reset-request', async (c) => {
     const link = `${new URL(c.req.url).origin}/parent/reset?token=${token}`;
     await sendEmail(c.env, {
       to: email,
-      subject: 'Reset your Times Tables password',
-      text: `Someone asked to reset the password for this email on Times Tables.\n\nTo choose a new password, open this link within ${RESET_MINUTES} minutes:\n${link}\n\nIf it wasn't you, you can ignore this email.`,
+      subject: 'Reset your Ashra password',
+      text: `Someone asked to reset the password for this email on Ashra.\n\nTo choose a new password, open this link within ${RESET_MINUTES} minutes:\n${link}\n\nIf it wasn't you, you can ignore this email.`,
     });
     if (devLinks(c)) devLink = link;
   }
