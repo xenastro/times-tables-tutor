@@ -170,10 +170,10 @@ Five short lessons come before the check-up: **equal groups** (plates of apples)
 - **Parents** sign in with email and password. Passwords are hashed with PBKDF2 via the browser-standard crypto built into Workers. Sessions use an HttpOnly cookie. Until the app opens to other families, sign-up requires an invite code.
 - **Children never have passwords or email addresses.** A phone is linked to a child profile with a code and receives a device token. The parent can unlink a phone at any time.
 - **Data about children is kept to a minimum:** first name or nickname, birth year, and practice events. No analytics or third-party trackers.
-- **Before opening to other families:**
-  - password reset by email
-  - account and data deletion
-  - privacy page
+- **Built for opening to other families (release 3):**
+  - **Password reset:** "Forgot password?" sends a one-time link that works for 60 minutes (only a hash is stored; the same reply whether or not the email has an account; rate-limited). Sending is pluggable ([worker/email.ts](worker/email.ts)); until a provider is configured the page says no email could be sent.
+  - **Account deletion:** "Delete my account" (password + typing DELETE) removes the parent, every child, all events, phones and voice clips at once.
+  - **Privacy page** at `/privacy`, linked from the welcome screen, sign-in and the parent area, in English and Arabic.
 
 ## 8. Tech stack and hosting
 
@@ -221,8 +221,8 @@ Five short lessons come before the check-up: **equal groups** (plates of apples)
 - bilingual mode: hear the question in Arabic, answer in digits
 
 **3:**
-- opening to other families (password reset, deletion, privacy page)
-- further IGCSE topics on the same engine
+- opening to other families (password reset, deletion, privacy page): **built** (§7); email sending needs a provider
+- further IGCSE topics on the same engine: **proposal** in [docs/next-topics.md](docs/next-topics.md)
 
 ## 10. How we'll know it's working
 

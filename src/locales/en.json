@@ -385,5 +385,45 @@
     "kicker": "Did you know?",
     "intro": "You have seen this fact the other way around.",
     "button": "Turn it around"
+  },
+  "reset": {
+    "forgot": "Forgot password?",
+    "forgotTitle": "Reset your password",
+    "forgotBody": "Enter your account's email. We'll send a link to choose a new password.",
+    "send": "Send the link",
+    "sent": "If an account uses that email, a link is on its way. It works for 60 minutes, once.",
+    "noEmail": "This app can't send emails yet, so no link was sent. Ask the person who gave you your invite code to help.",
+    "devLink": "Open the reset link (local testing only)",
+    "backToSignIn": "Back to sign in",
+    "newTitle": "Choose a new password",
+    "newPassword": "New password",
+    "save": "Save and sign in",
+    "invalid": "This link has expired or was already used. Ask for a new one."
+  },
+  "account": {
+    "delete": "Delete my account",
+    "deleteNote": "This deletes your account, every child on it, all their practice, linked phones and your voice recordings, straight away. It cannot be undone.",
+    "deleteButton": "Delete everything",
+    "deleted": "Your account and all its data have been deleted."
+  },
+  "privacy": {
+    "title": "Privacy",
+    "link": "Privacy",
+    "intro": "This app is a small family project. Here is exactly what it keeps, and why.",
+    "whoTitle": "Who runs it",
+    "who": "A parent built it for their own children and shares it with a few families by invitation. There are no ads, and nothing is sold.",
+    "storedTitle": "What we keep",
+    "stored": "For parents: your email and a scrambled (hashed) password. For each child: the first name or nickname you enter, an optional birth year, the avatar, colour and settings, and their practice: each answer, how long it took, hints, lessons and the optional “how did that feel?” taps. For linked phones: the browser's short device description and when it was last used. If you record your voice: those clips.",
+    "notStoredTitle": "What we don't do",
+    "notStored": "Children have no accounts, emails or passwords. There are no analytics, no trackers, no third-party scripts and no advertising. The only cookie is the parent sign-in cookie. Read-aloud uses the phone's own built-in voice.",
+    "phoneTitle": "On the phone",
+    "phone": "Practice is saved on the phone first, so it works offline, then copied to our server. Unlinking a phone clears its copy the next time it connects.",
+    "whereTitle": "Where it lives",
+    "where": "On Cloudflare (Workers and a D1 database in Western Europe), which hosts the app. If password-reset email is turned on, your email address is passed to the email service only to send that message.",
+    "deleteTitle": "Deleting",
+    "delete": "Remove one child under that child's Settings, or everything with “Delete my account” at the bottom of the parent area. Deletion is immediate and permanent.",
+    "contactTitle": "Questions",
+    "contact": "Ask the person who gave you your invite code.",
+    "updated": "Last updated October 2026."
   }
 }

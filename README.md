@@ -21,6 +21,7 @@ Every answer is stored as an event on the phone first (IndexedDB) and synced to 
 npm install
 npm run db:migrate:local
 echo "INVITE_CODE=family-test" > .dev.vars
+echo "EMAIL_LOG_LINKS=1" >> .dev.vars   # local only: shows password-reset links on screen
 npm run build          # the Worker serves ./dist
 npm run dev:api        # Worker + local D1 on :8787
 npm run dev            # app on :5173, proxies /api to :8787
@@ -36,6 +37,10 @@ node scripts/smoke-api.mjs             # API checks against :8787
 npx playwright test                    # full parent + child journey on a phone-sized browser
 ```
 
+Development-only previews (dev server only): `/dev/guide?a=7&b=8` (add `&missing=a&intro=1` for a missing-number guide), `/dev/turnaround?a=3&b=7`, `/dev/lesson?id=groups`, `/dev/words?n=56&lang=ar&digits=eastern`.
+
+Text lives in [src/locales](src/locales) (`en.json`, `ar.json`); a unit test checks they have the same keys.
+
 ## Deploying
 
 ```sh
@@ -45,3 +50,15 @@ npm run db:migrate:remote
 npx wrangler secret put INVITE_CODE
 npm run deploy
 ```
+
+### Password-reset email (optional)
+
+No email service is set up, so "Forgot password?" says it can't send emails. To turn it on, create an account with an email API (the code supports [Resend](https://resend.com) out of the box; see [worker/email.ts](worker/email.ts) to add another), verify your sending domain there, then:
+
+```sh
+npx wrangler secret put EMAIL_PROVIDER    # resend
+npx wrangler secret put RESEND_API_KEY
+npx wrangler secret put EMAIL_FROM        # e.g. Times Tables <noreply@your-domain>
+```
+
+Never set `EMAIL_LOG_LINKS` on the live Worker.

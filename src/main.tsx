@@ -8,6 +8,7 @@ import { NumberWordsShow } from './components/NumberWordsShow';
 import { TurnaroundShow } from './components/TurnaroundShow';
 import { setLocale } from './i18n';
 import { ParentApp } from './parent/ParentApp';
+import { Privacy } from './Privacy';
 import { useRoute } from './router';
 import './styles.css';
 
@@ -65,6 +66,7 @@ function App() {
   if (import.meta.env.DEV && path === '/dev/guide') return <GuidePreview />;
   if (import.meta.env.DEV && path === '/dev/turnaround') return <TurnaroundPreview />;
   if (import.meta.env.DEV && path === '/dev/lesson') return <LessonPreview />;
+  if (path === '/privacy') return <Privacy />;
   return path.startsWith('/parent') ? <ParentApp path={path} /> : <ChildApp path={path} />;
 }
 

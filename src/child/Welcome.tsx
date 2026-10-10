@@ -73,9 +73,14 @@ export function Welcome({ onPaired }: { onPaired: (d: DeviceRecord) => void }) {
           {busy ? t('welcome.linking') : t('welcome.link')}
         </button>
       </form>
-      <button className="link" style={{ alignSelf: 'center' }} onClick={() => navigate('/parent')}>
-        {t('welcome.parentLink')}
-      </button>
+      <div className="row" style={{ justifyContent: 'center', gap: 16 }}>
+        <button className="link" onClick={() => navigate('/parent')}>
+          {t('welcome.parentLink')}
+        </button>
+        <button className="link" onClick={() => navigate('/privacy')}>
+          {t('privacy.link')}
+        </button>
+      </div>
     </main>
   );
 }

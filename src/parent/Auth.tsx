@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { api, ApiError } from '../data/api';
 import { t } from '../i18n';
 import { navigate } from '../router';
+import { ForgotPassword } from './ResetPassword';
 
 export function Auth({ onSignedIn, onSwitchLanguage }: { onSignedIn: (email: string) => void; onSwitchLanguage: () => void }) {
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [invite, setInvite] = useState('');
@@ -44,6 +45,9 @@ export function Auth({ onSignedIn, onSwitchLanguage }: { onSignedIn: (email: str
           {t('parent.signUp')}
         </button>
       </div>
+      {mode === 'forgot' ? (
+        <ForgotPassword onBack={() => setMode('signin')} />
+      ) : (
       <form className="card stack" onSubmit={submit}>
         <label className="field">
           {t('parent.email')}
@@ -72,10 +76,19 @@ export function Auth({ onSignedIn, onSwitchLanguage }: { onSignedIn: (email: str
         <button className="btn btn-primary btn-big" disabled={busy}>
           {mode === 'signin' ? t('parent.signIn') : t('parent.signUp')}
         </button>
+        {mode === 'signin' && (
+          <button type="button" className="link" onClick={() => setMode('forgot')}>
+            {t('reset.forgot')}
+          </button>
+        )}
       </form>
+      )}
       <div className="row" style={{ justifyContent: 'center', gap: 16 }}>
         <button className="link" onClick={() => navigate('/')}>
           {t('app.name')}
+        </button>
+        <button className="link" onClick={() => navigate('/privacy')}>
+          {t('privacy.link')}
         </button>
         <button className="link" onClick={onSwitchLanguage}>
           {t('parent.langSwitch')}

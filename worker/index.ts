@@ -3,8 +3,9 @@ import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { ARABIC_CLIPS } from '../src/engine/arabic';
 import { AVATARS, EVENT_TYPES, THEMES, type AudioClipDTO, type DeviceDTO, type LearnerDTO, type LearnerSummaryDTO } from '../src/shared/api';
 import { hashPassword, randomDigits, randomToken, sha256, verifyPassword } from './crypto';
+import { emailConfigured, sendEmail, type EmailEnv } from './email';
 
-interface Env {
+interface Env extends EmailEnv {
   DB: D1Database;
   ASSETS: Fetcher;
   /** Sign-up requires this code; without it, sign-up is closed. */
@@ -204,6 +205,87 @@ async function requireParent(c: Ctx, next: Next) {
   c.set('parentId', row.parent_id);
   await next();
 }
+
+/* ---------------------------------------------------------------- password reset & account deletion */
+
+const RESET_MINUTES = 60;
+
+/**
+ * Local development only: the reset link comes back in the response (there's no mailbox to read).
+ * Needs EMAIL_LOG_LINKS=1 (only ever set in .dev.vars), plain http (the live site is https) and
+ * no email provider. (wrangler dev reports the live hostname, so the host can't be checked.)
+ */
+function devLinks(c: Ctx): boolean {
+  return c.env.EMAIL_LOG_LINKS === '1' && new URL(c.req.url).protocol === 'http:' && !emailConfigured(c.env);
+}
+
+app.post('/auth/reset-request', async (c) => {
+  const bucket = `reset:${clientIp(c)}`;
+  if (await tooManyFailures(c, bucket)) return bad(c, 'too_many_attempts', 429);
+  // Every request counts towards the limit, so this can't be used to spam someone's inbox.
+  await recordFailure(c, bucket);
+  const b = await body<{ email: string }>(c);
+  const email = typeof b.email === 'string' ? b.email.trim().toLowerCase() : '';
+  if (!validEmail(email)) return bad(c, 'invalid_email');
+
+  const enabled = emailConfigured(c.env);
+  let devLink: string | undefined;
+  const row = await c.env.DB.prepare('SELECT id FROM parents WHERE email = ?').bind(email).first<{ id: string }>();
+  if (row) {
+    const token = randomToken();
+    await c.env.DB.batch([
+      c.env.DB.prepare('DELETE FROM password_resets WHERE parent_id = ? OR expires_at < ?').bind(row.id, Date.now()),
+      c.env.DB.prepare('INSERT INTO password_resets (token_hash, parent_id, expires_at) VALUES (?, ?, ?)').bind(
+        await sha256(token),
+        row.id,
+        Date.now() + RESET_MINUTES * 60_000,
+      ),
+    ]);
+    const link = `${new URL(c.req.url).origin}/parent/reset?token=${token}`;
+    await sendEmail(c.env, {
+      to: email,
+      subject: 'Reset your Times Tables password',
+      text: `Someone asked to reset the password for this email on Times Tables.\n\nTo choose a new password, open this link within ${RESET_MINUTES} minutes:\n${link}\n\nIf it wasn't you, you can ignore this email.`,
+    });
+    if (devLinks(c)) devLink = link;
+  }
+  // The same answer whether or not the account exists.
+  return c.json({ ok: true, emailEnabled: enabled, ...(devLink ? { devLink } : {}) });
+});
+
+app.post('/auth/reset', async (c) => {
+  const b = await body<{ token: string; password: string }>(c);
+  if (typeof b.password !== 'string' || b.password.length < 8 || b.password.length > 200) return bad(c, 'weak_password');
+  const tokenHash = await sha256(String(b.token ?? ''));
+  const row = await c.env.DB.prepare('SELECT parent_id FROM password_resets WHERE token_hash = ? AND expires_at > ?')
+    .bind(tokenHash, Date.now())
+    .first<{ parent_id: string }>();
+  if (!row) return bad(c, 'invalid_reset', 400);
+  await c.env.DB.batch([
+    c.env.DB.prepare('UPDATE parents SET password_hash = ? WHERE id = ?').bind(await hashPassword(b.password), row.parent_id),
+    // The link is single-use, and every other signed-in browser is signed out.
+    c.env.DB.prepare('DELETE FROM password_resets WHERE parent_id = ?').bind(row.parent_id),
+    c.env.DB.prepare('DELETE FROM sessions WHERE parent_id = ?').bind(row.parent_id),
+  ]);
+  await startSession(c, row.parent_id);
+  const p = await c.env.DB.prepare('SELECT email FROM parents WHERE id = ?').bind(row.parent_id).first<{ email: string }>();
+  return c.json({ email: p?.email });
+});
+
+app.use('/auth/account', requireParent);
+/** Deletes the parent, their children, all practice data, linked phones and voice clips. */
+app.delete('/auth/account', async (c) => {
+  const b = await body<{ password: string }>(c);
+  const row = await c.env.DB.prepare('SELECT password_hash FROM parents WHERE id = ?')
+    .bind(c.get('parentId'))
+    .first<{ password_hash: string }>();
+  if (!row || typeof b.password !== 'string' || !(await verifyPassword(b.password, row.password_hash))) {
+    return bad(c, 'invalid_login', 401);
+  }
+  await c.env.DB.prepare('DELETE FROM parents WHERE id = ?').bind(c.get('parentId')).run();
+  deleteCookie(c, SESSION_COOKIE, { path: '/api' });
+  return c.json({ ok: true });
+});
 
 app.use('/auth/me', requireParent);
 app.get('/auth/me', async (c) => {

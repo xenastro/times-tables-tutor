@@ -5,6 +5,7 @@ import { navigate } from '../router';
 import { Auth } from './Auth';
 import { ChildDetail } from './ChildDetail';
 import { ChildrenList } from './ChildrenList';
+import { DeleteAccount, ResetPassword } from './ResetPassword';
 import { VoiceRecorder } from './VoiceRecorder';
 
 export function ParentApp({ path }: { path: string }) {
@@ -30,6 +31,8 @@ export function ParentApp({ path }: { path: string }) {
     navigate('/parent', { replace: true });
   }, []);
 
+  // A reset link works whether or not this browser is signed in.
+  if (path === '/parent/reset') return <ResetPassword onSignedIn={setEmail} />;
   if (email === undefined) return null;
   if (email === null) return <Auth onSignedIn={setEmail} onSwitchLanguage={switchLang} />;
 
@@ -54,6 +57,10 @@ export function ParentApp({ path }: { path: string }) {
           <p className="muted small">{email}</p>
           <ChildrenList />
           <VoiceRecorder />
+          <DeleteAccount />
+          <button className="link" style={{ alignSelf: 'center' }} onClick={() => navigate('/privacy')}>
+            {t('privacy.link')}
+          </button>
         </>
       )}
     </div>
